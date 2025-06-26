@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+target/
+
+# Build outputs
+dist/
+out/
+build/
+app/resources/bin/
+
+# Logs
+*.log
+logs/
+spells/*.log
+setup.log
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+
+# User data
+user_data/
+clipboard.db*
+*.sqlite
+*.sqlite-*
+
+# API Keys and secrets
+.env
+.env.local
+.env.*.local
+api_keys.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Electron
+.webpack/
+.certificates/
+
+# Rust
+**/*.rs.bk
+Cargo.lock
+
+# Development
+.cache/
+temp/
+tmp/ 
