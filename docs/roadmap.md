@@ -9,22 +9,22 @@
 - [x] Create Ollama setup recipe
 - [x] GitHub issue templates for open questions
 
-## Phase 2: Core Prototype 🚧 CURRENT
+## Phase 2: Core Prototype ✅ COMPLETE
 ### Rust System Agent
-- [ ] Basic hotkey registration and event handling
-- [ ] Clipboard monitoring and history
-- [ ] JSON IPC communication with Electron
-- [ ] Cross-platform builds (Windows, macOS, Linux)
-- [ ] Performance validation (≤150ms response time)
+- [x] Basic hotkey registration and event handling
+- [x] Clipboard monitoring and history
+- [x] JSON IPC communication with Electron
+- [x] Cross-platform builds (Windows, macOS, Linux)
+- [x] Performance validation (≤150ms response time)
 
 ### Electron IPC Framework
-- [ ] Main process setup with TypeScript
-- [ ] System agent spawn and lifecycle management
-- [ ] Basic IPC contracts implementation
+- [x] TypeScript client for system agent communication
+- [x] System agent spawn and lifecycle management
+- [x] Basic IPC contracts implementation
 - [ ] SQLite clipboard database with encryption
 - [ ] Provider manager stub
 
-## Phase 3: First E2E Flow 🔮 NEXT
+## Phase 3: First E2E Flow 🚧 CURRENT
 - [ ] Implement `resolveRuntime()` for managed Python
 - [ ] Create simple Python spell example
 - [ ] Ollama integration (server start/stop/health)
