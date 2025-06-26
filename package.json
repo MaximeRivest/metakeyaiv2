@@ -2,12 +2,12 @@
   "name": "metakey-ai",
   "version": "0.1.0",
   "description": "Cross-platform desktop assistant with clipboard/hotkey integration",
-  "main": "dist/main.js",
+  "main": "dist/main-simple.js",
   "scripts": {
     "build": "tsc && npm run build:agent",
     "build:agent": "cd system-agent && cargo build --release",
     "dev": "concurrently \"tsc -w\" \"electron dist/main.js\"",
-    "start": "electron dist/main.js",
+    "start": "electron dist/main-simple.js",
     "package": "electron-builder",
     "postinstall": "electron-builder install-app-deps"
   },

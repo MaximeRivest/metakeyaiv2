@@ -19,11 +19,17 @@
     "exactOptionalPropertyTypes": true
   },
   "include": [
-    "src/**/*"
+    "src/main-simple.ts",
+    "src/clipboard-manager.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "system-agent"
+    "system-agent",
+    "src/main.ts",
+    "src/spell-runner.ts",
+    "src/runtime-manager.ts",
+    "src/provider-manager.ts",
+    "src/system-agent-client.ts"
   ]
 } 

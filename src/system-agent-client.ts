@@ -38,7 +38,13 @@ export interface AgentResponse {
  * TypeScript client for MetaKey AI System Agent
  * Handles JSON IPC communication over stdin/stdout as per specification
  */
-export class SystemAgentClient extends EventEmitter {
+export class SystemAgentClient extends EventEmitter<{
+  hotkey: [{ id: string; shortcut: string }];
+  clipboard: [{ text: string; timestamp: number }];
+  ready: [];
+  error: [{ message: string; code?: string }];
+  response: [AgentResponse];
+}> {
   private process: ChildProcess | null = null;
   private isReady = false;
 
