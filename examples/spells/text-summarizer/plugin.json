@@ -1,0 +1,28 @@
+{
+  "id": "spell.text-summarizer",
+  "type": "spell",
+  "name": "Text Summarizer",
+  "description": "Summarize long text using local or cloud LLM",
+  "version": "1.0.0",
+  "entry": "summarize.py",
+  "shortcut": "ctrl-alt-s",
+  "permissions": {
+    "filesystem": "none",
+    "network": "none",
+    "subprocess": false,
+    "shell": false
+  },
+  "providers_supported": ["openai", "local-ollama"],
+  "default_provider": "local-ollama",
+  "author": {
+    "name": "MetaKey AI Team",
+    "email": "dev@metakey.ai",
+    "url": "https://github.com/metakey-ai/metakeyaiv2"
+  },
+  "models": {
+    "openai": ["gpt-4o", "gpt-4o-mini"],
+    "local-ollama": ["llama3.2:1b", "llama3.2:3b"]
+  },
+  "prompt_template": "Summarize the following text in 2-3 sentences, focusing on key points:\n\n{input}",
+  "max_tokens": 150
+} 
