@@ -213,18 +213,26 @@ class MetaKeyApp {
         if (code === 0 && output.trim()) {
           try {
             const result = JSON.parse(output.trim());
-            if (result.status === 'success' && result.output) {
+            // Handle our spell's actual output format
+            if (result.output) {
+              console.log('📝 Spell metadata:', result.metadata);
               resolve(result.output);
-            } else {
+            } else if (result.error) {
               console.error('Spell returned error:', result.error);
+              resolve(null);
+            } else {
+              console.error('Unknown spell response format:', result);
               resolve(null);
             }
           } catch (error) {
             console.error('Failed to parse spell output:', output);
+            console.error('Raw output was:', output);
             resolve(null);
           }
         } else {
-          console.error('Spell failed:', errorOutput);
+          console.error('Spell failed with code:', code);
+          console.error('Error output:', errorOutput);
+          console.error('Standard output:', output);
           resolve(null);
         }
       });
