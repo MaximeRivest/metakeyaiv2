@@ -8,12 +8,16 @@ export interface HotkeyBinding {
   payload?: any;
 }
 
+export type WidgetPositionConfig = Record<string, { x: number; y: number }>;
+
 export interface PathService {
   getUserDataPath(): string;
   getSpellsDirectory(): string;
   getThemesDirectory(): string;
   getHotkeysDirectory(): string;
   getHotkeyBindings(setNames: string[]): Promise<HotkeyBinding[]>;
+  getWidgetPositions(): Promise<WidgetPositionConfig>;
+  setWidgetPosition(widgetId: string, x: number, y: number): Promise<void>;
 }
 
 export class ConfigService implements PathService {
@@ -21,12 +25,15 @@ export class ConfigService implements PathService {
   private readonly spellsDirectory: string;
   private readonly themesDirectory: string;
   private readonly hotkeysDirectory: string;
+  private readonly widgetPositionsPath: string;
+  private widgetPositions: WidgetPositionConfig = {};
 
   constructor() {
     this.userDataPath = app.getPath('userData');
     this.spellsDirectory = path.join(this.userDataPath, 'spells');
     this.themesDirectory = path.join(this.userDataPath, 'themes');
     this.hotkeysDirectory = path.join(this.userDataPath, 'hotkeys');
+    this.widgetPositionsPath = path.join(this.userDataPath, 'overlay-positions.json');
   }
 
   /**
@@ -46,6 +53,7 @@ export class ConfigService implements PathService {
     await this.syncStockAssets(stockAssetDirectories.spells, this.spellsDirectory, 'spells');
     await this.syncStockAssets(stockAssetDirectories.themes, this.themesDirectory, 'themes');
     await this.syncStockAssets(stockAssetDirectories.hotkeys, this.hotkeysDirectory, 'hotkeys');
+    await this.loadWidgetPositions();
   }
 
   /**
@@ -112,6 +120,37 @@ export class ConfigService implements PathService {
       }
     }
 
+    if (finalBindings.size === 0) {
+      // This is a guard against a common issue where no hotkeys are loaded.
+      // If you expect hotkeys and see this, check your `setNames` and file paths.
+      console.warn(`[ConfigService] Warning: No hotkey bindings were loaded for sets: ${setNames.join(', ')}`);
+    }
+
     return Array.from(finalBindings.values());
+  }
+
+  private async loadWidgetPositions(): Promise<void> {
+    try {
+      this.widgetPositions = await fse.readJson(this.widgetPositionsPath);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        this.widgetPositions = {};
+      } else {
+        console.error('Error loading widget positions:', error);
+      }
+    }
+  }
+  
+  public async getWidgetPositions(): Promise<WidgetPositionConfig> {
+    return this.widgetPositions;
+  }
+
+  public async setWidgetPosition(widgetId: string, x: number, y: number): Promise<void> {
+    this.widgetPositions[widgetId] = { x, y };
+    try {
+      await fse.writeJson(this.widgetPositionsPath, this.widgetPositions, { spaces: 2 });
+    } catch (error) {
+      console.error('Error saving widget position:', error);
+    }
   }
 } 

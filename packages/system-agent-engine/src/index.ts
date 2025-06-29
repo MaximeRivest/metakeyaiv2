@@ -23,7 +23,7 @@ export class SystemAgentService extends EventEmitter {
 
     this.agentProcess = spawn(agentPath);
 
-    this.agentProcess.stdout?.on('data', this.handleData.bind(this));
+    this.agentProcess.stdout?.on('data', this.handleStdout.bind(this));
     this.agentProcess.stderr?.on('data', this.handleError.bind(this));
     this.agentProcess.on('close', this.handleClose.bind(this));
   }
@@ -33,31 +33,25 @@ export class SystemAgentService extends EventEmitter {
     this.agentProcess = null;
   }
 
-  private handleData(data: Buffer): void {
-    this.buffer += data.toString();
-    let boundary = this.buffer.indexOf('\n');
-
-    while (boundary !== -1) {
-      const message = this.buffer.substring(0, boundary).trim();
-      this.buffer = this.buffer.substring(boundary + 1);
-      boundary = this.buffer.indexOf('\n');
-
-      if (!message) continue;
-
-      try {
-        const event: SystemAgentEvent = JSON.parse(message);
-        this.emit('event', event); // A generic event
-        // Emit specific events based on the payload
-        if (event.event) {
-          this.emit(event.event, event);
-        } else if (event.event_type) {
-          // Legacy or different event format
-          const eventName = event.event_type.toLowerCase().replace('_', '-');
-          this.emit(eventName, event);
-        }
-      } catch (err) {
-        console.error('Error parsing message from system agent:', message, err);
-        this.emit('error', { message: 'Error parsing agent message', data: message });
+  private handleStdout(data: Buffer): void {
+    const messages = data.toString().trim().split('\n');
+    for (const message of messages) {
+      if (message) {
+        try {
+         const event: SystemAgentEvent = JSON.parse(message);
+         this.emit('event', event); // A generic event
+         // Emit specific events based on the payload
+         if (event.event) {
+           this.emit(event.event, event);
+         } else if (event.event_type) {
+           // Legacy or different event format
+           const eventName = event.event_type.toLowerCase().replace(/_/g, '-');
+           this.emit(eventName, event);
+         }
+       } catch (err) {
+         console.error('Error parsing message from system agent:', message, err);
+         this.emit('error', { message: 'Error parsing agent message', data: message });
+       }
       }
     }
   }

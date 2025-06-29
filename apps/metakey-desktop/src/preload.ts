@@ -3,6 +3,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import {
   IpcListenerSignatures,
+  IpcInvokeSignatures,
   IpcChannel,
   Theme,
   OverlayStatus,
@@ -25,5 +26,11 @@ contextBridge.exposeInMainWorld('ipc', {
     return () => {
       ipcRenderer.removeListener(channel, listener);
     };
+  },
+  invoke: <T extends keyof IpcInvokeSignatures>(
+    channel: T,
+    ...args: Parameters<IpcInvokeSignatures[T]>
+  ): ReturnType<IpcInvokeSignatures[T]> => {
+    return ipcRenderer.invoke(channel, ...args) as ReturnType<IpcInvokeSignatures[T]>;
   },
 });

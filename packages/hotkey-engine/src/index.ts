@@ -35,17 +35,12 @@ export class HotkeyEngine {
     this.bindings.clear();
     
     for (const binding of bindings) {
-      // Use the shortcut as the unique key for the binding map.
-      this.bindings.set(binding.shortcut, binding);
-      
       if (this.actions.has(binding.actionId)) {
         // Tell the system agent to use the shortcut as the unique ID.
         this.options.systemAgentService.registerHotkey(binding.shortcut, binding.shortcut);
-        console.log(`Registered hotkey "${binding.shortcut}" for action "${binding.actionId}"`);
-      } else {
-        console.warn(`Could not register hotkey for action "${binding.actionId}" - no handler registered.`);
       }
     }
+    this.bindings = new Map(bindings.map(b => [b.shortcut, b]));
   }
 
   private handleHotkeyPress(shortcutId: string): void {

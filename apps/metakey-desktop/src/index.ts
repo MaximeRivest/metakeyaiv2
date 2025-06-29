@@ -38,6 +38,7 @@ class MainApplication {
   private isEditMode = false;
   private pressedKeys: Set<string> = new Set();
   private keyStreamTimeout: NodeJS.Timeout;
+  private hotkeysRegistered = false;
 
   constructor() {
     // The 'ready' event is the entry point.
@@ -137,13 +138,21 @@ class MainApplication {
       
       this.overlayWindows.set(display.id, window);
       
-      window.webContents.on('did-finish-load', () => {
+      window.webContents.on('did-finish-load', async () => {
         // Determine layout based on whether this is the primary display or not.
         const isPrimary = display.id === primaryDisplay.id;
         const layoutKey = isPrimary ? 'primary' : 'secondary';
         const widgetLayout = theme.layout?.[layoutKey] || [];
+
+        const widgetPositions = await this.configService.getWidgetPositions();
+
+        // Augment layout with saved positions
+        const positionedLayout = widgetLayout.map(widget => {
+          const savedPosition = widgetPositions[widget.widgetId];
+          return savedPosition ? { ...widget, ...savedPosition } : widget;
+        });
         
-        window.webContents.send(IpcChannel.SET_THEME, { theme, layout: widgetLayout });
+        window.webContents.send(IpcChannel.SET_THEME, { theme, layout: positionedLayout });
 
         // Show the window without activating/focusing it.
         window.showInactive();
@@ -154,9 +163,10 @@ class MainApplication {
           message: 'Ready',
         });
         
-        // Load hotkeys only once after the first window loads
-        if (this.overlayWindows.size === 1) {
+        // Load hotkeys only once, triggered by the first window to finish loading.
+        if (!this.hotkeysRegistered) {
             this.loadAndRegisterHotkeys();
+            this.hotkeysRegistered = true;
         }
       });
     }
@@ -168,6 +178,37 @@ class MainApplication {
         message: 'Systems nominal.',
       });
     }, 5000);
+
+    ipcMain.handle(IpcChannel.LOAD_THEME, async (event, themeId: string) => {
+      // Note: We now use the singleton instance of the themeService.
+      const theme = await this.themeService.loadTheme(themeId);
+      // This handler is now more complex, as we need to update all windows
+      // with potentially different layouts. For now, we'll just broadcast
+      // a full theme update and let each renderer decide its layout.
+      // This assumes a full theme change, not just loading one on demand.
+      // The logic in createOverlayWindows is more appropriate for initial load.
+      // Re-implementing that logic here for hot-reloading themes.
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const widgetPositions = await this.configService.getWidgetPositions();
+
+      for (const [displayId, window] of this.overlayWindows.entries()) {
+        const isPrimary = displayId === primaryDisplay.id;
+        const layoutKey = isPrimary ? 'primary' : 'secondary';
+        const widgetLayout = theme.layout?.[layoutKey] || [];
+
+        const positionedLayout = widgetLayout.map(widget => {
+          const savedPosition = widgetPositions[widget.widgetId];
+          return savedPosition ? { ...widget, ...savedPosition } : widget;
+        });
+
+        window.webContents.send(IpcChannel.SET_THEME, { theme, layout: positionedLayout });
+      }
+      return theme;
+    });
+
+    ipcMain.handle(IpcChannel.OVERLAY_WIDGET_DRAG_END, (event, { widgetId, x, y }) => {
+      this.configService.setWidgetPosition(widgetId, x, y);
+    });
   }
 
   private registerActions(): void {
@@ -226,14 +267,14 @@ class MainApplication {
   }
 
   private async loadAndRegisterHotkeys(): Promise<void> {
-    // Define the loading order. In the future, this will come from user settings.
-    const setsToLoad = ['default', 'navigation'];
-    const finalBindings = await this.configService.getHotkeyBindings(setsToLoad);
-    this.hotkeyEngine.registerBindings(finalBindings);
-
-    this.systemAgentService.on('error', (error: any) => {
-        console.error('System Agent Service Error:', error);
-    });
+    try {
+      // Define the loading order. In the future, this will come from user settings.
+      const setsToLoad = ['default', 'alternative'];
+      const finalBindings = await this.configService.getHotkeyBindings(setsToLoad);
+      this.hotkeyEngine.registerBindings(finalBindings);
+    } catch (e) {
+      console.error("[Main] Failed to load and register hotkeys:", e);
+    }
   }
 
   private startSystemAgent(): void {
@@ -292,13 +333,25 @@ class MainApplication {
       // The logic in createOverlayWindows is more appropriate for initial load.
       // Re-implementing that logic here for hot-reloading themes.
       const primaryDisplay = screen.getPrimaryDisplay();
+      const widgetPositions = await this.configService.getWidgetPositions();
+
       for (const [displayId, window] of this.overlayWindows.entries()) {
         const isPrimary = displayId === primaryDisplay.id;
         const layoutKey = isPrimary ? 'primary' : 'secondary';
         const widgetLayout = theme.layout?.[layoutKey] || [];
-        window.webContents.send(IpcChannel.SET_THEME, { theme, layout: widgetLayout });
+
+        const positionedLayout = widgetLayout.map(widget => {
+          const savedPosition = widgetPositions[widget.widgetId];
+          return savedPosition ? { ...widget, ...savedPosition } : widget;
+        });
+
+        window.webContents.send(IpcChannel.SET_THEME, { theme, layout: positionedLayout });
       }
       return theme;
+    });
+
+    ipcMain.handle(IpcChannel.OVERLAY_WIDGET_DRAG_END, (event, { widgetId, x, y }) => {
+      this.configService.setWidgetPosition(widgetId, x, y);
     });
   }
 

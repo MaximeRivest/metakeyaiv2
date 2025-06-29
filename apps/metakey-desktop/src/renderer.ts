@@ -28,6 +28,7 @@
 
 import './index.css';
 import { IpcChannel, OverlayStatus, Theme, KeyEvent, OverlayContent, HotkeyTriggeredPayload, EditModePayload, WidgetConfig, ThemeAndLayout } from 'shared-types';
+import { Draggable } from './lib/draggable';
 
 declare global {
   interface Window {
@@ -37,12 +38,15 @@ declare global {
       on(channel: IpcChannel.SET_THEME, listener: (payload: ThemeAndLayout) => void): () => void;
       on(channel: IpcChannel.HOTKEY_TRIGGERED, listener: (payload: HotkeyTriggeredPayload) => void): () => void;
       on(channel: IpcChannel.OVERLAY_EDIT_MODE_CHANGED, listener: (payload: EditModePayload) => void): () => void;
+      invoke(channel: IpcChannel.OVERLAY_WIDGET_DRAG_END, payload: { widgetId: string, x: number, y: number }): Promise<void>;
+      invoke(channel: IpcChannel.LOAD_THEME, themeId: string): Promise<Theme>;
     };
   }
 }
 
 class Renderer {
   private overlayRoot: HTMLElement;
+  private activeDraggables: Draggable[] = [];
 
   // These elements are dynamic, so we need methods to find them.
   private get statusMessageEl() { return document.querySelector<HTMLElement>('.status-message'); }
@@ -89,10 +93,56 @@ class Renderer {
       if (widgetEl) {
         widgetEl.dataset.widgetId = widgetConfig.widgetId;
         widgetEl.dataset.size = widgetConfig.size;
+        
+        // Remove default position classes if custom coordinates are provided
+        if (widgetConfig.x !== undefined && widgetConfig.y !== undefined) {
+          widgetEl.style.left = `${widgetConfig.x}px`;
+          widgetEl.style.top = `${widgetConfig.y}px`;
+          
+          if (widgetConfig.widgetId === 'main-hud') {
+            widgetEl.style.transform = 'none'; // Override centering
+          }
+        }
+        
         this.overlayRoot.appendChild(widgetEl);
         console.log(`Rendered widget: ${widgetConfig.widgetId}`);
       }
     }
+    
+    // If we are in edit mode, make the new widgets draggable
+    if (this.overlayRoot.classList.contains('edit-mode')) {
+      this.enableDrag();
+    }
+  }
+
+  private enableDrag() {
+    this.cleanupDraggables();
+    const widgets = this.overlayRoot.querySelectorAll<HTMLElement>('.widget');
+    widgets.forEach(widget => {
+      widget.style.cursor = 'grab';
+      const draggable = new Draggable(widget, {
+        onDragEnd: (el, x, y) => {
+          const widgetId = el.dataset.widgetId;
+          if (widgetId) {
+            window.ipc.invoke(IpcChannel.OVERLAY_WIDGET_DRAG_END, { widgetId, x, y });
+          }
+        }
+      });
+      this.activeDraggables.push(draggable);
+    });
+  }
+
+  private disableDrag() {
+    this.cleanupDraggables();
+    const widgets = this.overlayRoot.querySelectorAll<HTMLElement>('.widget');
+    widgets.forEach(widget => {
+      widget.style.cursor = 'default';
+    });
+  }
+
+  private cleanupDraggables() {
+    this.activeDraggables.forEach(d => d.destroy());
+    this.activeDraggables = [];
   }
 
   private registerIpcListeners() {
@@ -184,8 +234,10 @@ class Renderer {
     window.ipc.on(IpcChannel.OVERLAY_EDIT_MODE_CHANGED, ({ isEditMode }) => {
       if (isEditMode) {
         this.overlayRoot.classList.add('edit-mode');
+        this.enableDrag();
       } else {
         this.overlayRoot.classList.remove('edit-mode');
+        this.disableDrag();
       }
     });
   }

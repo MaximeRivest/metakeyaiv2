@@ -22,6 +22,7 @@ export enum IpcChannel {
   // Overlay Edit Mode
   OVERLAY_TOGGLE_EDIT_MODE = 'overlay:toggle-edit-mode',
   OVERLAY_EDIT_MODE_CHANGED = 'overlay:edit-mode-changed',
+  OVERLAY_WIDGET_DRAG_END = 'overlay:widget-drag-end',
 }
 
 /**
@@ -37,6 +38,8 @@ export interface WidgetConfig {
   widgetId: string;
   component: string;
   size: 'orb' | 'mini' | 'small' | 'medium' | 'full';
+  x?: number;
+  y?: number;
 }
 
 export interface ThemeLayout {
@@ -114,4 +117,17 @@ export type IpcListenerSignatures = {
   [IpcChannel.AGENT_KEY_EVENT]: (event: KeyEvent) => void;
   [IpcChannel.HOTKEY_TRIGGERED]: (payload: HotkeyTriggeredPayload) => void;
   [IpcChannel.OVERLAY_EDIT_MODE_CHANGED]: (payload: EditModePayload) => void;
+};
+
+/**
+ * Defines the signatures for IPC handlers that can be invoked from a renderer
+ * process and return a promise (i.e., using `ipcMain.handle`).
+ */
+export type IpcInvokeSignatures = {
+  [IpcChannel.LOAD_THEME]: (themeId: string) => Promise<Theme>;
+  [IpcChannel.OVERLAY_WIDGET_DRAG_END]: (payload: {
+    widgetId: string;
+    x: number;
+    y: number;
+  }) => Promise<void>;
 }; 
