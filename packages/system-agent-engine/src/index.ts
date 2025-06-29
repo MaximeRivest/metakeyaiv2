@@ -63,9 +63,11 @@ export class SystemAgentService extends EventEmitter {
   }
 
   private handleError(data: Buffer): void {
-    const errorMessage = `System Agent Error: ${data.toString()}`;
-    console.error(errorMessage);
-    this.emit('error', { message: errorMessage });
+    const errorMessage = data.toString();
+    // Don't treat all stderr as a crash-worthy error.
+    // The agent uses stderr for logging, which is common for native binaries.
+    // We'll just print it to the console for debugging purposes.
+    console.log(`[system-agent-stderr]: ${errorMessage.trim()}`);
   }
 
   public registerHotkey(shortcut: string, id: string): void {

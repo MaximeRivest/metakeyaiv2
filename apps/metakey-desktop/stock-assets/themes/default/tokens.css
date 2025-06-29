@@ -9,4 +9,39 @@
 
   --mx-spinner-color: #fff;
   --mx-spinner-secondary-color: rgba(255, 255, 255, 0.3);
-} 
+
+  /* Typography */
+  --mx-font-size-s: 12px;
+  --mx-font-size-m: 16px;
+  --mx-font-size-l: 20px;
+
+  /* Layout */
+  --mx-event-log-position-bottom: 10px;
+  --mx-event-log-position-right: 10px;
+  --mx-event-log-position-left: auto;
+  --mx-event-log-position-top: auto;
+
+  /* Widget Sizes */
+  --mx-widget-orb-diameter: 72px;
+  --mx-widget-mini-diameter: 96px;
+  --mx-widget-small-w: 280px;
+  --mx-widget-small-h: 180px;
+  --mx-widget-medium-w: 400px;
+  --mx-widget-medium-h: 220px;
+  --mx-widget-full-w: 100vw;
+  --mx-widget-full-h: 100vh;
+
+  /* Widget Styles */
+  --mx-widget-bg: rgba(20, 20, 30, 0.92);
+  --mx-widget-border-color: rgba(170, 170, 200, 0.2);
+  --mx-widget-border-radius: 16px;
+  --mx-widget-padding: 16px;
+  --mx-widget-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  
+  --mx-success-border-color: rgba(60, 200, 120, 0.7);
+  --mx-error-border-color: rgba(220, 80, 80, 0.7);
+
+  /* Animations */
+  --mx-hotkey-trigger-duration: 3000ms;
+  --mx-hotkey-trigger-animation-speed: 500ms;
+}

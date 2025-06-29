@@ -1,5 +1,21 @@
 {
   "id": "default",
   "name": "MetaKey Default",
-  "tokens": "tokens.css"
+  "tokens": "tokens.css",
+  "layout": {
+    "primary": [
+      {
+        "widgetId": "main-hud",
+        "component": "MainHUD",
+        "size": "medium"
+      }
+    ],
+    "secondary": [
+      {
+        "widgetId": "debug-log",
+        "component": "DebugLog",
+        "size": "small"
+      }
+    ]
+  }
 } 

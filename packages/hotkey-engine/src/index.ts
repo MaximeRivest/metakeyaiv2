@@ -1,7 +1,7 @@
 import { SystemAgentService } from 'system-agent-engine';
 import { HotkeyBinding } from 'config-engine';
 
-type ActionHandler = (payload?: any) => void;
+type ActionHandler = (binding: HotkeyBinding) => void;
 
 export interface HotkeyEngineOptions {
   systemAgentService: SystemAgentService;
@@ -56,7 +56,7 @@ export class HotkeyEngine {
       const handler = this.actions.get(binding.actionId);
       if (handler) {
         // Execute the handler with the specific payload for this shortcut.
-        handler(binding.payload);
+        handler(binding);
       } else {
         console.warn(`No action handler found for actionId: ${binding.actionId}`);
       }

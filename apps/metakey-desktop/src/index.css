@@ -1,110 +1,165 @@
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
-    Arial, sans-serif;
+  font-family: var(--mx-font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
   margin: 0;
-  padding: 20px;
-  background-color: var(--mx-bg, rgba(30, 30, 40, 0.85));
+  /* Make the base background fully transparent; widgets control their own background */
+  background-color: transparent;
   color: var(--mx-text-color, #fff);
-  border-radius: var(--mx-border-radius, 12px);
+  /* Remove all old body-level presentation attributes */
+  padding: 0;
+  border-radius: 0;
+  backdrop-filter: none;
+}
+
+#overlay-root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  transition: all 0.2s ease-in-out;
+  
+  /* --- Development Helper --- */
+  /* Adds a visible border to the entire overlay window.
+     - Red = Passthrough (clicks go through the window)
+     - Green = Interactive (you can click on widgets) */
+  border: 2px solid rgba(255, 0, 0, 0.5); /* Default to Red */
+  box-sizing: border-box;
+}
+
+#overlay-root.edit-mode {
+  border-color: rgba(0, 255, 0, 0.7); /* Green for interactive mode */
+}
+
+
+/* --- WIDGET SYSTEM --- */
+
+.widget {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--mx-widget-bg, rgba(20, 20, 30, 0.92));
+  border: 1px solid var(--mx-widget-border-color, rgba(170, 170, 200, 0.2));
+  border-radius: var(--mx-widget-border-radius, 16px);
+  overflow: hidden;
+  box-shadow: var(--mx-widget-shadow, 0 10px 40px rgba(0, 0, 0, 0.3));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(var(--mx-blur, 10px));
 }
 
-#overlay-container {
+.widget-content {
+  padding: var(--mx-widget-padding, 16px);
+  width: 100%;
+  height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
 }
 
-.message {
-  font-size: 1.2em;
+
+/* --- WIDGET SIZES --- */
+
+.widget[data-size="small"] {
+  width: var(--mx-widget-small-w, 280px);
+  height: var(--mx-widget-small-h, 180px);
+}
+.widget[data-size="medium"] {
+  width: var(--mx-widget-medium-w, 400px);
+  height: var(--mx-widget-medium-h, 220px);
 }
 
-.spinner {
-  display: none;
-  border: 4px solid var(--mx-spinner-secondary-color, rgba(255, 255, 255, 0.3));
-  border-radius: 50%;
-  border-top: 4px solid var(--mx-spinner-color, #fff);
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
+
+/* --- WIDGET-SPECIFIC STYLES --- */
+
+.widget[data-widget-id="main-hud"] {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.widget[data-widget-id="debug-log"] {
+  bottom: var(--mx-event-log-position-bottom, 10px);
+  right: var(--mx-event-log-position-right, 10px);
+  left: var(--mx-event-log-position-left, auto);
+  top: var(--mx-event-log-position-top, auto);
 }
 
-/* State-specific styles */
-#overlay-container.idle .message,
-#overlay-container.idle .spinner {
-  display: none;
+
+/* --- WIDGET STATES --- */
+
+#overlay-root.success .widget[data-widget-id="main-hud"] {
+  border-color: var(--mx-success-border-color, rgba(60, 200, 120, 0.7));
+  box-shadow: 0 0 20px -5px var(--mx-success-border-color, rgba(60, 200, 120, 0.7));
+}
+#overlay-root.error .widget[data-widget-id="main-hud"] {
+  border-color: var(--mx-error-border-color, rgba(220, 80, 80, 0.7));
+  box-shadow: 0 0 20px -5px var(--mx-error-border-color, rgba(220, 80, 80, 0.7));
 }
 
-#overlay-container.running .message {
-  display: none;
-}
-#overlay-container.running .spinner {
-  display: block;
-}
 
-#overlay-container.success {
-  background-color: var(--mx-success-bg, rgba(30, 80, 50, 0.85));
-}
-#overlay-container.error {
-  background-color: var(--mx-error-bg, rgba(100, 30, 30, 0.85));
-}
-#overlay-container.success .spinner,
-#overlay-container.error .spinner {
-  display: none;
-}
+/* --- COMPONENT STYLES (UPDATED) --- */
 
 .status-message {
   padding: 8px 16px;
   border-radius: 8px;
-  font-size: 1.1em;
+  font-size: var(--mx-font-size-l, 20px);
   font-weight: 500;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
 }
 
-#event-log {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  color: white;
+#key-stream-display {
+  font-size: var(--mx-font-size-l, 20px);
   font-family: monospace;
-  font-size: 12px;
-  max-height: 100px;
-  overflow-y: auto;
-  background-color: rgba(0,0,0,0.5);
-  padding: 5px;
-  border-radius: 5px;
-  min-width: 200px;
-  opacity: 0.8;
-  transition: opacity 0.3s;
+  padding: 10px 20px;
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  color: var(--mx-text-color, #fff);
+  max-width: 90%;
+  word-wrap: break-word;
+  text-align: center;
 }
 
-#event-log:hover {
-  opacity: 1;
+#pressed-keys-display {
+  font-family: monospace;
+  font-size: var(--mx-font-size-m, 16px);
+  color: var(--mx-text-color, #fff);
+  position: absolute;
+  bottom: var(--mx-widget-padding, 16px);
+  opacity: 0.6;
 }
 
-#event-log > div {
-  padding: 2px 5px;
-  border-radius: 3px;
-  margin-bottom: 2px;
+#hotkey-trigger-display {
+  font-family: monospace;
+  font-size: var(--mx-font-size-m, 16px);
+  color: var(--mx-accent, #00ff00);
+  text-shadow: 0 0 5px var(--mx-accent, #00ff00);
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  position: absolute;
+  top: var(--mx-widget-padding, 16px);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 8px;
 }
 
-#event-log .key-event-press {
-  color: #a7c7e7; /* A light blue for key press */
+#hotkey-trigger-display > .trigger-item {
+  padding: 4px 8px;
+  background-color: rgba(0,0,0,0.3);
+  border-radius: 6px;
+  animation: 
+    fade-in-out var(--mx-hotkey-trigger-duration, 3000ms) ease-in-out forwards,
+    slide-up var(--mx-hotkey-trigger-duration, 3000ms) ease-out forwards;
 }
 
-#event-log .key-event-release {
-  color: #e7a7a7; /* A light red for key release */
+@keyframes fade-in-out {
+  0% { opacity: 1; transform: scale(1); }
+  15% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
 }
 
-#event-log code {
-  background-color: rgba(255, 255, 255, 0.1);
-  padding: 1px 4px;
-  border-radius: 3px;
+@keyframes slide-up {
+  from { transform: translateY(0); }
+  to { transform: translateY(-80px); }
 }

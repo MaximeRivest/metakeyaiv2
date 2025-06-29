@@ -5,25 +5,40 @@
     <title>MetaKey Overlay</title>
   </head>
   <body>
-    <!-- The main container for all status and ephemeral content -->
-    <div id="overlay-container" class="idle">
-      <!-- Standard status message (e.g., "Processing...", "Success!") -->
-      <div class="status-message"></div>
-
-      <!-- Container for rich content like spell results -->
-      <div id="content-display" style="display: none;">
-        <h2 id="content-title"></h2>
-        <div id="content-body"></div>
-      </div>
-
-      <!-- Container for the live key stream -->
-      <div id="key-stream-display" style="display: none;"></div>
-    </div>
+    <!-- The main container for all overlay widgets. It will be populated by the renderer. -->
+    <div id="overlay-root" class="idle"></div>
     
     <!-- This div is reserved for a future UI framework like React -->
     <div id="root"></div>
-    
-    <!-- A log for raw key events, useful for debugging -->
-    <div id="event-log"></div>
+
+    <!-- WIDGET TEMPLATES -->
+    <!-- These are not rendered by default, but are cloned by the renderer script. -->
+
+    <template id="template-MainHUD">
+      <div class="widget" data-widget-id="main-hud" data-size="medium">
+        <div class="widget-content">
+          <!-- Standard status message (e.g., "Processing...", "Success!") -->
+          <div class="status-message"></div>
+          <!-- Container for rich content like spell results -->
+          <div id="content-display" style="display: none;">
+            <h2 id="content-title"></h2>
+            <div id="content-body"></div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-DebugLog">
+      <div class="widget" data-widget-id="debug-log" data-size="small">
+          <div class="widget-content">
+            <!-- Container for hotkey trigger notifications -->
+            <div id="hotkey-trigger-display">
+              <!-- Notifications will be added here dynamically -->
+            </div>
+            <!-- Shows currently held keys -->
+            <div id="pressed-keys-display"></div>
+          </div>
+      </div>
+    </template>
   </body>
 </html>

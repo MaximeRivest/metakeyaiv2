@@ -95,6 +95,24 @@ lazy_static! {
         "keyx" => Key::KeyX,
         "keyy" => Key::KeyY,
         "keyz" => Key::KeyZ,
+
+        // Numpad keys (both variants)
+        "kp0" => Key::Kp0,
+        "kp1" => Key::Kp1,
+        "kp2" => Key::Kp2,
+        "kp3" => Key::Kp3,
+        "kp4" => Key::Kp4,
+        "kp5" => Key::Kp5,
+        "kp6" => Key::Kp6,
+        "kp7" => Key::Kp7,
+        "kp8" => Key::Kp8,
+        "kp9" => Key::Kp9,
+        "kpreturn" => Key::KpReturn,
+        "kpplus" => Key::KpPlus,
+        "kpminus" => Key::KpMinus,
+        "kpmultiply" => Key::KpMultiply,
+        "kpdivide" => Key::KpDivide,
+        "kpdelete" => Key::KpDelete,
     };
 }
 

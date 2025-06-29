@@ -26,7 +26,7 @@ if (require('electron-squirrel-startup')) {
 }
 
 class MainApplication {
-  private mainWindow: BrowserWindow;
+  private overlayWindows: Map<number, BrowserWindow> = new Map();
   
   private configService: ConfigService;
   private clipboardService: ClipboardService;
@@ -35,7 +35,8 @@ class MainApplication {
   private systemAgentService: SystemAgentService;
   private hotkeyEngine: HotkeyEngine;
 
-  private keyStream = '';
+  private isEditMode = false;
+  private pressedKeys: Set<string> = new Set();
   private keyStreamTimeout: NodeJS.Timeout;
 
   constructor() {
@@ -49,7 +50,7 @@ class MainApplication {
 
   private async onReady(): Promise<void> {
     await this.initializeServices();
-    this.createWindow();
+    this.createOverlayWindows();
     this.startSystemAgent();
     this.registerIpcHandlers();
   }
@@ -65,7 +66,7 @@ class MainApplication {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
-      this.createWindow();
+      this.createOverlayWindows();
     }
   }
 
@@ -98,43 +99,71 @@ class MainApplication {
     console.log('✅ User data is stored at:', this.configService.getUserDataPath());
   }
   
-  private async createWindow(): Promise<void> {
+  private broadcast(channel: string, ...args: any[]): void {
+    for (const window of this.overlayWindows.values()) {
+      window.webContents.send(channel, ...args);
+    }
+  }
+
+  private async createOverlayWindows(): Promise<void> {
+    const displays = screen.getAllDisplays();
     const primaryDisplay = screen.getPrimaryDisplay();
-    const { x, y, width, height } = primaryDisplay.workArea;
 
-    const windowWidth = 800;
-    const windowHeight = 800;
-
-    this.mainWindow = new BrowserWindow({
-      width: windowWidth,
-      height: windowHeight,
-      x: x + width - windowWidth - 20,
-      y: y + 20,
-      frame: false,
-      transparent: true,
-      alwaysOnTop: true,
-      webPreferences: {
-        preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      },
-    });
-
-    this.mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-
-    // Set the default theme on startup
     const theme = await this.themeService.loadTheme('default');
-    this.mainWindow.webContents.on('did-finish-load', () => {
-      this.mainWindow.webContents.send(IpcChannel.SET_THEME, theme);
-      this.mainWindow.webContents.send(IpcChannel.OVERLAY_SET_STATUS, {
-        status: 'idle',
-        message: 'Ready',
-      });
-      // Now that the window is loaded, we can load and register the hotkeys
-      this.loadAndRegisterHotkeys();
-    });
 
-    // Example of how to send a status update
+    for (const display of displays) {
+      const { x, y, width, height } = display.workArea;
+
+      const window = new BrowserWindow({
+        x,
+        y,
+        width,
+        height,
+        frame: false,
+        transparent: true,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        show: false, // Start hidden
+        type: 'splash',
+        webPreferences: {
+          preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+        },
+      });
+
+      window.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+      
+      // Set initial state: passthrough clicks
+      window.setIgnoreMouseEvents(true, { forward: true });
+      
+      this.overlayWindows.set(display.id, window);
+      
+      window.webContents.on('did-finish-load', () => {
+        // Determine layout based on whether this is the primary display or not.
+        const isPrimary = display.id === primaryDisplay.id;
+        const layoutKey = isPrimary ? 'primary' : 'secondary';
+        const widgetLayout = theme.layout?.[layoutKey] || [];
+        
+        window.webContents.send(IpcChannel.SET_THEME, { theme, layout: widgetLayout });
+
+        // Show the window without activating/focusing it.
+        window.showInactive();
+
+        // Set initial status for this window
+        window.webContents.send(IpcChannel.OVERLAY_SET_STATUS, {
+          status: 'idle',
+          message: 'Ready',
+        });
+        
+        // Load hotkeys only once after the first window loads
+        if (this.overlayWindows.size === 1) {
+            this.loadAndRegisterHotkeys();
+        }
+      });
+    }
+
+    // Example of how to send a status update to all overlays
     setTimeout(() => {
-      this.mainWindow.webContents.send(IpcChannel.OVERLAY_SET_STATUS, {
+      this.broadcast(IpcChannel.OVERLAY_SET_STATUS, {
         status: 'success',
         message: 'Systems nominal.',
       });
@@ -142,19 +171,31 @@ class MainApplication {
   }
 
   private registerActions(): void {
-    this.hotkeyEngine.registerAction('spell:run', (payload: { spellId: string, metadata: SpellMetadata }) => {
+    this.hotkeyEngine.registerAction('spell:run', (binding: HotkeyBinding) => {
+      const payload = binding.payload as { spellId: string, metadata: SpellMetadata };
+      if (!payload) return;
+      
       const { spellId, metadata } = payload;
+      
+      this.broadcast(IpcChannel.HOTKEY_TRIGGERED, {
+        shortcut: binding.shortcut,
+        actionId: binding.actionId,
+        spellTitle: metadata?.spellTitle || spellId,
+      });
+
       const clipboardContent = this.clipboardService.read();
       this.spellService.run(spellId, { input: clipboardContent }, metadata)
         .catch(err => console.error(`Error running spell '${spellId}':`, err.message));
     });
+    
+    this.hotkeyEngine.registerAction('overlay:toggle-edit-mode', this.toggleEditMode.bind(this));
     
     // In the future, other actions like 'clipboard:cycle-forward' would be registered here.
   }
 
   private registerServiceEventHandlers(): void {
     this.spellService.on('spell:start', ({ spellId, metadata }) => {
-      this.mainWindow.webContents.send(IpcChannel.OVERLAY_SET_STATUS, {
+      this.broadcast(IpcChannel.OVERLAY_SET_STATUS, {
         status: 'processing',
         message: `Casting ${metadata.spellTitle || 'spell'}...`,
       });
@@ -162,11 +203,11 @@ class MainApplication {
 
     this.spellService.on('spell:success', ({ spellId, metadata, result }) => {
       this.clipboardService.write(result.output);
-      this.mainWindow.webContents.send(IpcChannel.OVERLAY_SET_STATUS, {
+      this.broadcast(IpcChannel.OVERLAY_SET_STATUS, {
         status: 'success',
         message: 'Spell Complete!',
       });
-      this.mainWindow.webContents.send(IpcChannel.OVERLAY_SHOW_CONTENT, {
+      this.broadcast(IpcChannel.OVERLAY_SHOW_CONTENT, {
         id: `spell-result-${Date.now()}`,
         type: 'SPELL_RESULT',
         title: metadata.spellTitle || 'Spell Result',
@@ -177,7 +218,7 @@ class MainApplication {
 
     this.spellService.on('spell:error', ({ spellId, metadata, error }) => {
       console.error(`Spell [${spellId}] failed:`, error);
-      this.mainWindow.webContents.send(IpcChannel.OVERLAY_SET_STATUS, {
+      this.broadcast(IpcChannel.OVERLAY_SET_STATUS, {
         status: 'error',
         message: error.message,
       });
@@ -189,6 +230,10 @@ class MainApplication {
     const setsToLoad = ['default', 'navigation'];
     const finalBindings = await this.configService.getHotkeyBindings(setsToLoad);
     this.hotkeyEngine.registerBindings(finalBindings);
+
+    this.systemAgentService.on('error', (error: any) => {
+        console.error('System Agent Service Error:', error);
+    });
   }
 
   private startSystemAgent(): void {
@@ -203,31 +248,32 @@ class MainApplication {
     // Note: Hotkey registration is now handled by the HotkeyEngine
     // and initiated after the window loads.
 
-    this.systemAgentService.on('keypress', (event: SystemAgentEvent) => this.handleKeyPress(event));
-    this.systemAgentService.on('keyrelease', (event: SystemAgentEvent) => {
-      // For now, just forward the event to the renderer.
-      this.mainWindow.webContents.send(IpcChannel.AGENT_KEY_EVENT, event);
-    });
-    this.systemAgentService.on('error', (error: any) => {
-        console.error('System Agent Service Error:', error);
-    });
+    this.systemAgentService.on('keypress', (event: SystemAgentEvent) => this.handleKeyEvent(event, 'press'));
+    this.systemAgentService.on('keyrelease', (event: SystemAgentEvent) => this.handleKeyEvent(event, 'release'));
   }
 
-  private handleKeyPress(event: SystemAgentEvent): void {
-      this.mainWindow.webContents.send(IpcChannel.AGENT_KEY_EVENT, event);
-      this.keyStream += event.key.replace('Key', ''); // Clean up the key name
+  private handleKeyEvent(event: SystemAgentEvent, type: 'press' | 'release'): void {
+      this.broadcast(IpcChannel.AGENT_KEY_EVENT, event);
       
-      this.mainWindow.webContents.send(IpcChannel.OVERLAY_SHOW_CONTENT, {
+      if (type === 'press') {
+        this.pressedKeys.add(event.key);
+      } else {
+        this.pressedKeys.delete(event.key);
+      }
+
+      const keys = Array.from(this.pressedKeys).join(' + ');
+      
+      this.broadcast(IpcChannel.OVERLAY_SHOW_CONTENT, {
         id: 'key-stream',
         type: 'KEY_STREAM',
-        keys: this.keyStream,
+        keys,
       });
 
       // Set a timer to clear the key stream after a period of inactivity
       clearTimeout(this.keyStreamTimeout);
       this.keyStreamTimeout = setTimeout(() => {
-        this.keyStream = '';
-        this.mainWindow.webContents.send(IpcChannel.OVERLAY_SHOW_CONTENT, {
+        this.pressedKeys.clear();
+        this.broadcast(IpcChannel.OVERLAY_SHOW_CONTENT, {
           id: 'key-stream',
           type: 'KEY_STREAM',
           keys: '',
@@ -239,9 +285,38 @@ class MainApplication {
     ipcMain.handle(IpcChannel.LOAD_THEME, async (event, themeId: string) => {
       // Note: We now use the singleton instance of the themeService.
       const theme = await this.themeService.loadTheme(themeId);
-      this.mainWindow.webContents.send(IpcChannel.SET_THEME, theme);
+      // This handler is now more complex, as we need to update all windows
+      // with potentially different layouts. For now, we'll just broadcast
+      // a full theme update and let each renderer decide its layout.
+      // This assumes a full theme change, not just loading one on demand.
+      // The logic in createOverlayWindows is more appropriate for initial load.
+      // Re-implementing that logic here for hot-reloading themes.
+      const primaryDisplay = screen.getPrimaryDisplay();
+      for (const [displayId, window] of this.overlayWindows.entries()) {
+        const isPrimary = displayId === primaryDisplay.id;
+        const layoutKey = isPrimary ? 'primary' : 'secondary';
+        const widgetLayout = theme.layout?.[layoutKey] || [];
+        window.webContents.send(IpcChannel.SET_THEME, { theme, layout: widgetLayout });
+      }
       return theme;
     });
+  }
+
+  private toggleEditMode(): void {
+    this.isEditMode = !this.isEditMode;
+    for (const window of this.overlayWindows.values()) {
+      window.setIgnoreMouseEvents(!this.isEditMode, { forward: true });
+    }
+    this.broadcast(IpcChannel.OVERLAY_EDIT_MODE_CHANGED, { isEditMode: this.isEditMode });
+
+    // When entering edit mode, explicitly focus the primary window.
+    if (this.isEditMode) {
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const primaryWindow = this.overlayWindows.get(primaryDisplay.id);
+      if (primaryWindow) {
+        primaryWindow.focus();
+      }
+    }
   }
 }
 

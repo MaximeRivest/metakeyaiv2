@@ -26,5 +26,13 @@
     {
       "shortcut": "Control+Alt+Left",
       "actionId": "clipboard:cycle-backward"
+    },
+    {
+      "shortcut": "Control+Alt+Kp0",
+      "actionId": "overlay:toggle-edit-mode"
+    },
+    {
+      "shortcut": "Control+Alt+Num0",
+      "actionId": "overlay:toggle-edit-mode"
     }
 ] 

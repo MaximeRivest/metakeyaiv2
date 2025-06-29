@@ -15,6 +15,13 @@ export enum IpcChannel {
 
   // System Agent -> Main Process
   AGENT_KEY_EVENT = 'agent:key-event',
+  
+  // Hotkey Engine -> Main Process -> Renderer
+  HOTKEY_TRIGGERED = 'hotkey:triggered',
+
+  // Overlay Edit Mode
+  OVERLAY_TOGGLE_EDIT_MODE = 'overlay:toggle-edit-mode',
+  OVERLAY_EDIT_MODE_CHANGED = 'overlay:edit-mode-changed',
 }
 
 /**
@@ -24,6 +31,17 @@ export enum IpcChannel {
 export interface OverlayStatus {
   status: 'idle' | 'listening' | 'processing' | 'success' | 'error';
   message?: string;
+}
+
+export interface WidgetConfig {
+  widgetId: string;
+  component: string;
+  size: 'orb' | 'mini' | 'small' | 'medium' | 'full';
+}
+
+export interface ThemeLayout {
+  primary?: WidgetConfig[];
+  secondary?: WidgetConfig[];
 }
 
 /**
@@ -57,6 +75,31 @@ export interface Theme {
   id: string; // The directory name of the theme
   name: string; // The human-readable name from theme.json
   tokens: string; // The absolute path to the tokens.css file
+  layout?: ThemeLayout;
+}
+
+/**
+ * The data payload sent to a renderer process to apply a theme and a specific layout.
+ */
+export interface ThemeAndLayout {
+  theme: Theme;
+  layout: WidgetConfig[];
+}
+
+/**
+ * The data payload when a registered hotkey is successfully triggered.
+ */
+export interface HotkeyTriggeredPayload {
+  shortcut: string;
+  actionId: string;
+  spellTitle?: string;
+}
+
+/**
+ * The data payload for the edit mode state change.
+ */
+export interface EditModePayload {
+  isEditMode: boolean;
 }
 
 /**
@@ -65,8 +108,10 @@ export interface Theme {
  * preventing mismatches between sent and received data.
  */
 export type IpcListenerSignatures = {
-  [IpcChannel.SET_THEME]: (theme: Theme) => void;
+  [IpcChannel.SET_THEME]: (payload: ThemeAndLayout) => void;
   [IpcChannel.OVERLAY_SET_STATUS]: (payload: OverlayStatus) => void;
   [IpcChannel.OVERLAY_SHOW_CONTENT]: (payload: OverlayContent) => void;
   [IpcChannel.AGENT_KEY_EVENT]: (event: KeyEvent) => void;
+  [IpcChannel.HOTKEY_TRIGGERED]: (payload: HotkeyTriggeredPayload) => void;
+  [IpcChannel.OVERLAY_EDIT_MODE_CHANGED]: (payload: EditModePayload) => void;
 }; 
