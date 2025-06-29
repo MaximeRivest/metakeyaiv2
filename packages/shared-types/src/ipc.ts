@@ -46,7 +46,7 @@ export type OverlayContent = {
  * The data payload for a single keyboard event from the system agent.
  */
 export interface KeyEvent {
-  event_type: 'key_down' | 'key_up';
+  event_type: 'KeyPress' | 'KeyRelease';
   key: string;
 }
 

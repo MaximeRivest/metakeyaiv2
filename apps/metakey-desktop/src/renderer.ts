@@ -27,14 +27,15 @@
  */
 
 import './index.css';
-import { IpcChannel, OverlayState, Theme, KeyEvent } from 'shared-types';
+import { IpcChannel, OverlayStatus, Theme, KeyEvent, OverlayContent } from 'shared-types';
 
 declare global {
   interface Window {
     ipc: {
-      on(channel: IpcChannel.SET_STATE, listener: (state: OverlayState) => void): void;
-      on(channel: IpcChannel.SET_THEME, listener: (theme: Theme) => void): void;
-      on(channel: IpcChannel.KEY_EVENT, listener: (event: KeyEvent) => void): void;
+      on(channel: IpcChannel.OVERLAY_SET_STATUS, listener: (status: OverlayStatus) => void): () => void;
+      on(channel: IpcChannel.OVERLAY_SHOW_CONTENT, listener: (content: OverlayContent) => void): () => void;
+      on(channel: IpcChannel.SET_THEME, listener: (theme: Theme) => void): () => void;
+      on(channel: IpcChannel.AGENT_KEY_EVENT, listener: (event: KeyEvent) => void): () => void;
     };
   }
 }
@@ -48,7 +49,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  const messageEl = overlay.querySelector<HTMLElement>('.message');
+  const statusMessageEl = overlay.querySelector<HTMLElement>('.status-message');
+  const contentDisplayEl = document.getElementById('content-display');
+  const contentTitleEl = document.getElementById('content-title');
+  const contentBodyEl = document.getElementById('content-body');
+  const keyStreamDisplayEl = document.getElementById('key-stream-display');
+
   const themeStyleTag = document.createElement('link');
   themeStyleTag.rel = 'stylesheet';
   document.head.appendChild(themeStyleTag);
@@ -60,29 +66,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  window.ipc.on(IpcChannel.SET_STATE, (state: OverlayState) => {
-    if (!messageEl) return;
+  window.ipc.on(IpcChannel.OVERLAY_SET_STATUS, (payload: OverlayStatus) => {
+    if (!statusMessageEl) return;
 
     // Remove all state classes first
-    overlay.classList.remove('success', 'error', 'idle');
+    overlay.classList.remove('success', 'error', 'idle', 'processing', 'listening');
 
     // Add the current state class
-    if (state.status) {
-      overlay.classList.add(state.status);
+    if (payload.status) {
+      overlay.classList.add(payload.status);
     }
 
-    if (state.status === 'success' || state.status === 'error') {
-      messageEl.innerHTML = state.message;
+    if (payload.message) {
+      statusMessageEl.innerHTML = payload.message;
     } else {
-      messageEl.innerHTML = '';
+      statusMessageEl.innerHTML = '';
     }
   });
 
-  window.ipc.on(IpcChannel.KEY_EVENT, (event: KeyEvent) => {
+  window.ipc.on(IpcChannel.OVERLAY_SHOW_CONTENT, (payload: OverlayContent) => {
+    if (payload.type === 'SPELL_RESULT') {
+      if (contentDisplayEl && contentTitleEl && contentBodyEl) {
+        contentTitleEl.innerText = payload.title;
+        contentBodyEl.innerText = payload.body; // For now, just text. Markdown later.
+        contentDisplayEl.style.display = 'block';
+        keyStreamDisplayEl.style.display = 'none';
+      }
+    } else if (payload.type === 'KEY_STREAM') {
+      if (keyStreamDisplayEl) {
+        keyStreamDisplayEl.innerText = payload.keys;
+        keyStreamDisplayEl.style.display = 'block';
+        contentDisplayEl.style.display = 'none';
+      }
+    }
+  });
+
+  window.ipc.on(IpcChannel.AGENT_KEY_EVENT, (event: KeyEvent) => {
     const eventLog = document.getElementById('event-log');
     if (eventLog) {
       const eventEl = document.createElement('div');
-      eventEl.innerText = `[${event.event_type}] ${event.key}`;
+      const eventTypeClass = event.event_type === 'KeyPress' ? 'key-event-press' : 'key-event-release';
+      eventEl.classList.add(eventTypeClass);
+
+      eventEl.innerHTML = `[${event.event_type}] <code>${event.key}</code>`;
       eventLog.appendChild(eventEl);
       eventLog.scrollTop = eventLog.scrollHeight;
     }

@@ -1,12 +1,13 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs/promises';
+import { EventEmitter } from 'events';
 
 interface SpellContext {
   input: string;
 }
 
-interface SpellResult {
+export interface SpellResult {
   output: string;
 }
 
@@ -14,23 +15,35 @@ export interface SpellServiceOptions {
   spellsDirectory: string;
 }
 
-export class SpellService {
+export interface SpellMetadata {
+  [key: string]: any;
+}
+
+export class SpellService extends EventEmitter {
   private options: SpellServiceOptions;
 
   constructor(options: SpellServiceOptions) {
+    super();
     this.options = options;
   }
 
-  private async resolveSpellPath(spellId: string): Promise<string | null> {
-    const spellPath = path.join(this.options.spellsDirectory, `${spellId}.py`);
-    try {
-      await fs.access(spellPath);
-      return spellPath; // Found it
-    } catch (e) {
-      // Spell not found
-    }
+  public async discoverSpells(): Promise<string[]> {
+    const spellFiles = await fs.readdir(this.options.spellsDirectory);
+    // Return the filenames without the extension as the spell IDs
+    return spellFiles.map(file => path.parse(file).name);
+  }
 
-    return null; // Not found in the directory
+  private async resolveSpellPath(spellId: string): Promise<string | null> {
+    const spellDirectory = this.options.spellsDirectory;
+    // For now, we assume python, but this could be expanded.
+    const potentialPath = path.join(spellDirectory, `${spellId}.py`);
+    try {
+      await fs.access(potentialPath);
+      return potentialPath;
+    } catch (e) {
+      // Could also check for .js, .sh, etc. here in the future
+    }
+    return null; // Not found
   }
   // --- temporary 
   public async installSpell(sourcePath: string): Promise<void> {
@@ -45,14 +58,16 @@ export class SpellService {
     }
   }
   // --- end temporary 
-  public async run(spellId: string, context: SpellContext): Promise<SpellResult> {
-    const spellPath = await this.resolveSpellPath(spellId);
+  public run(spellId: string, context: SpellContext, metadata: SpellMetadata = {}): Promise<SpellResult> {
+    this.emit('spell:start', { spellId, metadata });
 
-    if (!spellPath) {
-      throw new Error(`Spell with ID "${spellId}" not found.`);
-    }
+    const promise = new Promise<SpellResult>(async (resolve, reject) => {
+      const spellPath = await this.resolveSpellPath(spellId);
 
-    return new Promise((resolve, reject) => {
+      if (!spellPath) {
+        return reject(new Error(`Spell with ID "${spellId}" not found.`));
+      }
+
       const spell = spawn('python3', [spellPath]);
       let output = '';
       let error = '';
@@ -84,5 +99,15 @@ export class SpellService {
         reject(err);
       });
     });
+
+    promise
+      .then(result => {
+        this.emit('spell:success', { spellId, metadata, result });
+      })
+      .catch(error => {
+        this.emit('spell:error', { spellId, metadata, error });
+      });
+
+    return promise;
   }
 } 

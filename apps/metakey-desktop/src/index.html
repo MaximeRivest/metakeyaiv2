@@ -5,11 +5,25 @@
     <title>MetaKey Overlay</title>
   </head>
   <body>
+    <!-- The main container for all status and ephemeral content -->
     <div id="overlay-container" class="idle">
-      <div class="spinner"></div>
-      <div class="message"></div>
+      <!-- Standard status message (e.g., "Processing...", "Success!") -->
+      <div class="status-message"></div>
+
+      <!-- Container for rich content like spell results -->
+      <div id="content-display" style="display: none;">
+        <h2 id="content-title"></h2>
+        <div id="content-body"></div>
+      </div>
+
+      <!-- Container for the live key stream -->
+      <div id="key-stream-display" style="display: none;"></div>
     </div>
+    
+    <!-- This div is reserved for a future UI framework like React -->
     <div id="root"></div>
-    <div id="event-log" style="position: absolute; bottom: 10px; left: 10px; color: white; font-family: monospace; font-size: 12px; max-height: 100px; overflow-y: auto; background-color: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px;"></div>
+    
+    <!-- A log for raw key events, useful for debugging -->
+    <div id="event-log"></div>
   </body>
 </html>

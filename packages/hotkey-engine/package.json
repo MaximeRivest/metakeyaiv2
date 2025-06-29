@@ -1,0 +1,10 @@
+{
+  "name": "hotkey-engine",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "dependencies": {
+    "system-agent-engine": "workspace:*",
+    "config-engine": "workspace:*"
+  }
+} 

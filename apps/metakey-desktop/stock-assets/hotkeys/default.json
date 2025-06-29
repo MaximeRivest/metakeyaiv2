@@ -1,0 +1,30 @@
+[
+  {
+    "shortcut": "Control+Alt+Q",
+    "actionId": "spell:run",
+    "payload": {
+      "spellId": "hello",
+      "metadata": {
+        "spellTitle": "Hello World"
+      }
+    }
+  },
+  {
+    "shortcut": "Control+Shift+L",
+    "actionId": "spell:run",
+    "payload": {
+      "spellId": "spell-to-lowercase",
+      "metadata": {
+        "spellTitle": "Convert to Lowercase"
+      }
+    }
+  },
+    {
+      "shortcut": "Control+Alt+Right",
+      "actionId": "clipboard:cycle-forward"
+    },
+    {
+      "shortcut": "Control+Alt+Left",
+      "actionId": "clipboard:cycle-backward"
+    }
+] 

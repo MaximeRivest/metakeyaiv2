@@ -23,7 +23,9 @@
     "clipboard-engine": "workspace:*",
     "spell-engine": "workspace:*",
     "config-engine": "workspace:*",
-    "theme-engine": "workspace:*"
+    "theme-engine": "workspace:*",
+    "system-agent-engine": "workspace:*",
+    "hotkey-engine": "workspace:*"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.8.1",

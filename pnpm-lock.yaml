@@ -23,12 +23,18 @@ importers:
       electron-squirrel-startup:
         specifier: ^1.0.1
         version: 1.0.1
+      hotkey-engine:
+        specifier: workspace:*
+        version: link:../../packages/hotkey-engine
       shared-types:
         specifier: workspace:*
         version: link:../../packages/shared-types
       spell-engine:
         specifier: workspace:*
         version: link:../../packages/spell-engine
+      system-agent-engine:
+        specifier: workspace:*
+        version: link:../../packages/system-agent-engine
       theme-engine:
         specifier: workspace:*
         version: link:../../packages/theme-engine
@@ -108,11 +114,22 @@ importers:
         specifier: ^11.2.0
         version: 11.3.0
 
+  packages/hotkey-engine:
+    dependencies:
+      config-engine:
+        specifier: workspace:*
+        version: link:../config-engine
+      system-agent-engine:
+        specifier: workspace:*
+        version: link:../system-agent-engine
+
   packages/overlay-renderer: {}
 
   packages/shared-types: {}
 
   packages/spell-engine: {}
+
+  packages/system-agent-engine: {}
 
   packages/theme-engine:
     dependencies:
