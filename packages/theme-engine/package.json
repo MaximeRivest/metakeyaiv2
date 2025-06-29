@@ -1,0 +1,10 @@
+{
+  "name": "theme-engine",
+  "version": "1.0.0",
+  "description": "Handles loading and managing themes.",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "dependencies": {
+    "shared-types": "workspace:*"
+  }
+} 

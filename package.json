@@ -1,70 +1,19 @@
 {
-  "name": "metakey-ai",
-  "version": "0.1.0",
-  "description": "Cross-platform desktop assistant with clipboard/hotkey integration",
-  "main": "dist/main-simple.js",
+  "name": "metakeyaiv2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "build": "tsc && npm run build:agent",
-    "build:agent": "cd system-agent && cargo build --release",
-    "dev": "concurrently \"tsc -w\" \"electron dist/main.js\"",
-    "start": "electron dist/main-simple.js",
-    "package": "electron-builder",
-    "postinstall": "electron-builder install-app-deps"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "desktop-assistant",
-    "clipboard",
-    "hotkeys",
-    "llm",
-    "electron"
-  ],
-  "authors": [
-    "Max Rivest",
-    "Sota (Onetoken.ai)"
-  ],
-  "license": "GPL-2.0",
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/better-sqlite3": "^7.6.0",
-    "concurrently": "^8.0.0",
-    "electron": "^28.0.0",
-    "electron-builder": "^24.0.0",
-    "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "better-sqlite3": "^9.0.0",
-    "electron-updater": "^6.0.0"
-  },
-  "build": {
-    "appId": "ai.metakey.desktop",
-    "productName": "MetaKey AI",
-    "directories": {
-      "output": "dist-packages"
-    },
-    "files": [
-      "dist/**/*",
-      "app/resources/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "system-agent/target/release/",
-        "to": "bin/${os}/",
-        "filter": ["system-agent*"]
-      }
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "assets/icon.icns",
-      "category": "public.app-category.productivity"
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": "assets/icon.png",
-      "category": "Utility"
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "pnpm": {
+    "overrides": {
+      "@vercel/webpack-asset-relocator-loader": "1.7.3",
+      "electron": "37.1.0"
     }
   }
-} 
+}

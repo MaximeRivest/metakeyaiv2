@@ -1,0 +1,7 @@
+{
+  "name": "overlay-renderer",
+  "version": "1.0.0",
+  "description": "The UI rendering layer for the MetaKey AI overlay.",
+  "main": "src/index.ts",
+  "license": "MIT"
+} 
