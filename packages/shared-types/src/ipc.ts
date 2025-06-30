@@ -26,6 +26,7 @@ export enum IpcChannel {
 
   // Spellbook
   SPELLBOOK_UPDATE = 'spellbook:update',
+  SPELLBOOK_NAVIGATE = 'spellbook:navigate',
   SPELLBOOK_CLOSE_REQUEST = 'spellbook:close-request',
   SPELL_EXECUTE = 'spell:execute',
 
@@ -49,8 +50,8 @@ export interface WidgetConfig {
   component: string;
   size: 'orb' | 'mini' | 'small' | 'medium' | 'full';
   role?: 'spellbook';
-  x?: number;
-  y?: number;
+  x?: number | string;
+  y?: number | string;
 }
 
 export interface DisplayLayout {
@@ -140,6 +141,7 @@ export type IpcListenerSignatures = {
   [IpcChannel.HOTKEY_TRIGGERED]: (payload: HotkeyTriggeredPayload) => void;
   [IpcChannel.OVERLAY_EDIT_MODE_CHANGED]: (payload: EditModePayload) => void;
   [IpcChannel.SPELLBOOK_UPDATE]: (payload: SpellbookUpdatePayload) => void;
+  [IpcChannel.SPELLBOOK_NAVIGATE]: (payload: { key: string }) => void;
   [IpcChannel.SPELL_START]: (payload: { spellId: string; metadata: any }) => void;
   [IpcChannel.SPELL_SUCCESS]: (payload: { spellId: string; metadata: any; result: { output: string } }) => void;
   [IpcChannel.SPELL_ERROR]: (payload: { spellId: string; metadata: any; error: Error }) => void;

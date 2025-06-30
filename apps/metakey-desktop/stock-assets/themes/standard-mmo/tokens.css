@@ -1,0 +1,80 @@
+:root {
+  /* Professional color palette - clean and neutral */
+  --mx-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --mx-text-color: #22223b;
+  --mx-border-radius: 12px;
+  --mx-blur: 8px;
+
+  --mx-success-bg: linear-gradient(135deg, rgba(72, 187, 120, 0.95), rgba(56, 161, 105, 0.95));
+  --mx-error-bg: linear-gradient(135deg, rgba(245, 101, 101, 0.95), rgba(229, 62, 62, 0.95));
+
+  --mx-spinner-color: #4299e1;
+  --mx-spinner-secondary-color: rgba(66, 153, 225, 0.3);
+
+  /* Typography - Clean and readable */
+  --mx-font-size-s: 14px;
+  --mx-font-size-m: 16px;
+  --mx-font-size-l: 20px;
+  --mx-font: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Layout */
+  --mx-event-log-position-bottom: 20px;
+  --mx-event-log-position-right: 20px;
+  --mx-event-log-position-left: auto;
+  --mx-event-log-position-top: auto;
+
+  /* Widget Sizes - Large for MMO style */
+  --mx-widget-orb-diameter: 72px;
+  --mx-widget-mini-diameter: 96px;
+  --mx-widget-small-w: 320px;
+  --mx-widget-small-h: 200px;
+  --mx-widget-medium-w: 450px;
+  --mx-widget-medium-h: 280px;
+  --mx-widget-full-w: 100vw;
+  --mx-widget-full-h: 100vh;
+
+  /* Widget Styles - Clean and professional with transparency */
+  --mx-widget-bg: rgba(255, 255, 255, 0.5);
+  --mx-widget-border-color: rgba(224, 231, 239, 0.5);
+  --mx-widget-border-radius: 20px;
+  --mx-widget-padding: 24px;
+  --mx-widget-shadow: 0 8px 32px rgba(60, 72, 100, 0.12);
+  
+  --mx-success-border-color: rgba(72, 187, 120, 0.8);
+  --mx-error-border-color: rgba(245, 101, 101, 0.8);
+
+  /* Animations */
+  --mx-hotkey-trigger-duration: 2500ms;
+  --mx-hotkey-trigger-animation-speed: 400ms;
+
+  /* Notifications */
+  --mx-notification-duration: 3000ms;
+  --mx-notification-animation-style: slide;
+  --mx-notification-bg: rgba(255, 255, 255, 0.5);
+  --mx-notification-border: 1px solid rgba(203, 213, 224, 0.5);
+  --mx-notification-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  
+  /* Stats Widget */
+  --mx-stats-bg: rgba(255, 255, 255, 0.5);
+  --mx-stats-label-color: rgba(45, 55, 72, 0.7);
+  --mx-stats-value-color: #2d3748;
+  --mx-stats-grid-gap: 16px;
+
+  /* Spellbook Widget - Narrow side panel */
+  --mx-spellbook-width: 20vw;
+  --mx-spellbook-height: 50vh;
+  --mx-spellbook-max-height: 50vh;
+  --mx-spellbook-bg: rgba(255, 255, 255, 0.5);
+  --mx-spell-item-selected-bg: rgba(66, 153, 225, 0.15);
+  --mx-spell-item-shortcut-bg: rgba(113, 128, 150, 0.1);
+  
+  /* Spellbook menu styling */
+  --mx-spellbook-menu-bg: rgba(241, 245, 249, 0.5);
+  --mx-spellbook-menu-item-selected-bg: rgba(224, 231, 239, 0.5);
+  --mx-spellbook-grid-columns: 2;
+
+  /* Professional accent color */
+  --mx-accent: #3b82f6;
+  --mx-accent-hover: #3182ce;
+  --mx-accent-light: rgba(66, 153, 225, 0.1);
+} 

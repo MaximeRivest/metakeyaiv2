@@ -1,0 +1,61 @@
+{
+    "id": "standard-mmo",
+    "name": "Standard MMO",
+    "tokens": "tokens.css",
+    "layouts": {
+      "1": {
+        "primary": [
+          {
+            "widgetId": "main-hud",
+            "component": "MainHUD",
+            "size": "medium",
+            "x": "5%",
+            "y": "5%"
+          },
+          {
+            "widgetId": "notifications",
+            "component": "Notifications",
+            "size": "medium"
+          },
+          {
+            "widgetId": "stats",
+            "component": "Stats",
+            "size": "small",
+            "x": "80%",
+            "y": "80%"
+          },
+          {
+            "widgetId": "spell-book",
+            "component": "SpellBook",
+            "role": "spellbook",
+            "x": "78%",
+            "y": "25%"
+          }
+        ]
+      },
+      "default": {
+        "primary": [
+          {
+            "widgetId": "main-hud",
+            "component": "MainHUD",
+            "size": "medium"
+          },
+          {
+            "widgetId": "notifications",
+            "component": "Notifications",
+            "size": "medium"
+          },
+          {
+            "widgetId": "stats",
+            "component": "Stats",
+            "size": "small"
+          },
+          {
+            "widgetId": "spell-book",
+            "component": "SpellBook",
+            "role": "spellbook"
+          }
+        ]
+      }
+    }
+  }

@@ -7,13 +7,15 @@ export class SpellbookView extends BaseWidget {
     private navMode: 'menu' | 'grid' = 'menu';
     private menuIndex = 0;
     private gridIndex = 0;
+    private navigationCleanup: (() => void) | null = null;
 
     constructor() {
         super('spell-book');
     }
 
     protected onMount(): void {
-        // Widget is ready, no additional setup needed yet
+        // Set up navigation listener via IPC
+        this.navigationCleanup = window.ipc.on(IpcChannel.SPELLBOOK_NAVIGATE, this.handleNavigation);
     }
 
     public update(payload: { spells: SpellbookEntry[], menu: SpellbookMenuItem[] }): void {
@@ -22,7 +24,7 @@ export class SpellbookView extends BaseWidget {
         this.spells = payload.spells;
         this.menu = payload.menu;
         this.populate();
-        this.setNavMode(true);
+        this.show();
     }
 
     private populate() {
@@ -58,18 +60,22 @@ export class SpellbookView extends BaseWidget {
         this.updateSelection();
     }
 
-    private setNavMode(isActive: boolean) {
-        if (isActive) {
-            document.addEventListener('keydown', this.handleKeyDown, true);
+    private handleNavigation = ({ key }: { key: string }) => {
+        if (!this.widget) return;
+
+        if (this.navMode === 'menu') {
+            this.handleMenuNavigation(key);
         } else {
-            document.removeEventListener('keydown', this.handleKeyDown, true);
-            this.queryAll('.selected').forEach(el => el.classList.remove('selected'));
+            this.handleGridNavigation(key);
         }
     }
 
     protected onDestroy(): void {
-        // Clean up event listeners
-        document.removeEventListener('keydown', this.handleKeyDown, true);
+        // Clean up IPC listener
+        if (this.navigationCleanup) {
+            this.navigationCleanup();
+            this.navigationCleanup = null;
+        }
     }
 
     private updateSelection() {
@@ -96,30 +102,18 @@ export class SpellbookView extends BaseWidget {
         });
     }
 
-    private handleKeyDown = (e: KeyboardEvent) => {
-        if (!this.widget) return;
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (this.navMode === 'menu') {
-            this.handleMenuKeyDown(e);
-        } else {
-            this.handleGridKeyDown(e);
-        }
-    }
-
-    private handleMenuKeyDown = (e: KeyboardEvent) => {
+    private handleMenuNavigation(key: string) {
         const menuItems = this.queryAll('.spellbook-menu-item');
         if (menuItems.length === 0) return;
 
-        switch (e.key) {
-            case 'ArrowUp':
+        switch (key) {
+            case 'ArrowLeft':
                 this.menuIndex = (this.menuIndex - 1 + menuItems.length) % menuItems.length;
                 break;
-            case 'ArrowDown':
+            case 'ArrowRight':
                 this.menuIndex = (this.menuIndex + 1) % menuItems.length;
                 break;
-            case 'ArrowRight':
+            case 'ArrowDown':
                 this.navMode = 'grid';
                 this.gridIndex = 0;
                 break;
@@ -127,14 +121,14 @@ export class SpellbookView extends BaseWidget {
                 console.log(`Menu item selected: ${menuItems[this.menuIndex].textContent}`);
                 break;
             case 'Escape':
-                this.setNavMode(false);
+                this.hide();
                 window.ipc.invoke(IpcChannel.SPELLBOOK_CLOSE_REQUEST);
                 break;
         }
         this.updateSelection();
     }
 
-    private handleGridKeyDown = (e: KeyboardEvent) => {
+    private handleGridNavigation(key: string) {
         const gridItems = this.queryAll('.spell-grid-item');
         if (gridItems.length === 0) return;
 
@@ -142,19 +136,19 @@ export class SpellbookView extends BaseWidget {
         if (!gridEl) return;
         const columns = getComputedStyle(gridEl).gridTemplateColumns.split(' ').length;
 
-        switch (e.key) {
-            case 'ArrowLeft':
-                if (this.gridIndex % columns === 0) {
+        switch (key) {
+            case 'ArrowUp':
+                if (this.gridIndex < columns) {
                     this.navMode = 'menu';
                 } else {
-                    this.gridIndex--;
+                    this.gridIndex = (this.gridIndex - columns + gridItems.length) % gridItems.length;
                 }
+                break;
+            case 'ArrowLeft':
+                this.gridIndex = (this.gridIndex - 1 + gridItems.length) % gridItems.length;
                 break;
             case 'ArrowRight':
                 this.gridIndex = (this.gridIndex + 1) % gridItems.length;
-                break;
-            case 'ArrowUp':
-                this.gridIndex = (this.gridIndex - columns + gridItems.length) % gridItems.length;
                 break;
             case 'ArrowDown':
                 this.gridIndex = (this.gridIndex + columns) % gridItems.length;
@@ -165,11 +159,11 @@ export class SpellbookView extends BaseWidget {
                 if (spellId) {
                     window.ipc.invoke(IpcChannel.SPELL_EXECUTE, { spellId });
                 }
-                this.setNavMode(false);
+                this.hide();
                 window.ipc.invoke(IpcChannel.SPELLBOOK_CLOSE_REQUEST);
                 break;
             case 'Escape':
-                this.setNavMode(false);
+                this.hide();
                 window.ipc.invoke(IpcChannel.SPELLBOOK_CLOSE_REQUEST);
                 break;
         }

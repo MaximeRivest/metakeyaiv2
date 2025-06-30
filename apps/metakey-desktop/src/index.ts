@@ -43,7 +43,7 @@ class MainApplication {
   private currentTheme: Theme | null = null;
   private currentDisplayCount = 0;
   private isQuitting = false;
-  private availableThemes: string[] = ['default', 'magical'];
+  private availableThemes: string[] = ['standard-mmo', 'default', 'magical'];
   private currentThemeIndex = 0;
 
   constructor() {
@@ -155,7 +155,7 @@ class MainApplication {
       .filter(d => d.id !== primaryDisplay.id)
       .sort((a, b) => a.bounds.x - b.bounds.x);
 
-    const theme = await this.themeService.loadTheme('default');
+    const theme = await this.themeService.loadTheme('standard-mmo');
     this.currentTheme = theme;
 
     for (const display of displays) {
@@ -187,6 +187,13 @@ class MainApplication {
       window.setIgnoreMouseEvents(true, { forward: true });
 
       this.overlayWindows.set(display.id, window);
+      
+      // Handle focus loss - close spellbook if user clicks away
+      window.on('blur', () => {
+        if (this.isSpellbookVisible) {
+          this.toggleSpellbookMode();
+        }
+      });
       
       window.webContents.on('did-finish-load', async () => {
         const activeLayout = this.findLayoutForDisplayCount(this.currentTheme.layouts, this.currentDisplayCount);
@@ -339,6 +346,25 @@ class MainApplication {
   private handleKeyEvent(event: SystemAgentEvent, type: 'press' | 'release'): void {
       this.broadcast(IpcChannel.AGENT_KEY_EVENT, event);
       
+      // If spellbook is visible and this is a key press, check for navigation keys
+      if (this.isSpellbookVisible && type === 'press') {
+        const navigationKeys = ['UpArrow', 'DownArrow', 'LeftArrow', 'RightArrow', 'Return', 'Escape'];
+        if (navigationKeys.includes(event.key)) {
+          // Map the system-agent key names to standard names for the spellbook
+          const keyMap: { [key: string]: string } = {
+            'UpArrow': 'ArrowUp',
+            'DownArrow': 'ArrowDown', 
+            'LeftArrow': 'ArrowLeft',
+            'RightArrow': 'ArrowRight',
+            'Return': 'Enter',
+            'Escape': 'Escape'
+          };
+          const mappedKey = keyMap[event.key] || event.key;
+          this.broadcast(IpcChannel.SPELLBOOK_NAVIGATE, { key: mappedKey });
+          return; // Don't process this key for the key stream display
+        }
+      }
+      
       if (type === 'press') {
         this.pressedKeys.add(event.key);
       } else {
@@ -467,8 +493,8 @@ class MainApplication {
     
     this.broadcast(IpcChannel.OVERLAY_EDIT_MODE_CHANGED, { isEditMode: isOn });
 
-    // When entering edit mode, explicitly focus the primary window for immediate typing
-    if (this.isEditMode) {
+    // When entering interactive mode (edit mode OR spellbook), explicitly focus the primary window for immediate keyboard input
+    if (isOn) {
       const primaryDisplay = screen.getPrimaryDisplay();
       const primaryWindow = this.overlayWindows.get(primaryDisplay.id);
       if (primaryWindow) {

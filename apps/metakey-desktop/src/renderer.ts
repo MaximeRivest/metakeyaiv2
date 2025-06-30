@@ -40,6 +40,7 @@ declare global {
       on(channel: IpcChannel.HOTKEY_TRIGGERED, listener: (payload: HotkeyTriggeredPayload) => void): () => void;
       on(channel: IpcChannel.OVERLAY_EDIT_MODE_CHANGED, listener: (payload: EditModePayload) => void): () => void;
       on(channel: IpcChannel.SPELLBOOK_UPDATE, listener: (payload: { spells: SpellbookEntry[]; menu: SpellbookMenuItem[] }) => void): () => void;
+      on(channel: IpcChannel.SPELLBOOK_NAVIGATE, listener: (payload: { key: string }) => void): () => void;
       on(channel: IpcChannel.SPELL_START, listener: (payload: { spellId: string; metadata: any }) => void): () => void;
       on(channel: IpcChannel.SPELL_SUCCESS, listener: (payload: { spellId: string; metadata: any; result: { output: string } }) => void): () => void;
       on(channel: IpcChannel.SPELL_ERROR, listener: (payload: { spellId: string; metadata: any; error: Error }) => void): () => void;
@@ -103,12 +104,17 @@ class Renderer {
         
         // Remove default position classes if custom coordinates are provided
         if (widgetConfig.x !== undefined && widgetConfig.y !== undefined) {
-          widgetEl.style.left = `${widgetConfig.x}px`;
-          widgetEl.style.top = `${widgetConfig.y}px`;
-          
-          if (widgetConfig.widgetId === 'main-hud') {
-            widgetEl.style.transform = 'none'; // Override centering
+          if (typeof widgetConfig.x === 'string' && widgetConfig.x.endsWith('%')) {
+            widgetEl.style.left = `calc(${widgetConfig.x} - ${widgetEl.offsetWidth / 2}px)`;
+          } else {
+            widgetEl.style.left = `${widgetConfig.x}px`;
           }
+          if (typeof widgetConfig.y === 'string' && widgetConfig.y.endsWith('%')) {
+            widgetEl.style.top = `calc(${widgetConfig.y} - ${widgetEl.offsetHeight / 2}px)`;
+          } else {
+            widgetEl.style.top = `${widgetConfig.y}px`;
+          }
+          widgetEl.style.transform = 'none';
         }
         
         this.overlayRoot.appendChild(widgetEl);
@@ -204,7 +210,11 @@ class Renderer {
 
     window.ipc.on(IpcChannel.SPELLBOOK_UPDATE, (payload) => {
       this.spellbookView?.update(payload);
-  });
+    });
+
+    window.ipc.on(IpcChannel.SPELLBOOK_NAVIGATE, (payload) => {
+      // Navigation is handled directly in SpellbookView via its own IPC listener
+    });
 
   window.ipc.on(IpcChannel.OVERLAY_SET_STATUS, (payload: OverlayStatus) => {
       this.mainHUDView?.setStatus(payload.status, payload.message);
