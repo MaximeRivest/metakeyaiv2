@@ -166,16 +166,21 @@ class MainApplication {
         y,
         width,
         height,
-      frame: false,
-      transparent: true,
-      alwaysOnTop: true,
+        frame: false,
+        transparent: true,
+        alwaysOnTop: true,
         skipTaskbar: true,
+        focusable: false, // Non-focusable by default to prevent stealing focus
         show: false, // Start hidden
-      webPreferences: {
-        preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      },
-    });
+        type: process.platform === 'darwin' ? 'panel' : undefined, // Better macOS behavior
+        webPreferences: {
+          preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+        },
+      });
 
+      // Set the window level to keep it above others, including fullscreen apps
+      window.setAlwaysOnTop(true, 'floating');
+      
       window.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
     
     // Set initial state: passthrough clicks
@@ -202,8 +207,14 @@ class MainApplication {
         
         window.webContents.send(IpcChannel.SET_THEME, { theme: this.currentTheme, layout: widgetLayout });
 
+        // Re-assert the "on-top" state before showing the window
+        window.setAlwaysOnTop(true, 'floating');
+        
         // Show the window without activating/focusing it.
         window.showInactive();
+        
+        // Force the window to the front on Windows/Linux
+        window.moveTop();
 
         // Set initial status for this window
         window.webContents.send(IpcChannel.OVERLAY_SET_STATUS, {
@@ -435,13 +446,28 @@ class MainApplication {
   private setInteractive(isOn: boolean): void {
     if (this.isQuitting) return;
     this.isEditMode = isOn;
+    
     for (const window of this.overlayWindows.values()) {
       window.setIgnoreMouseEvents(!isOn, { forward: true });
-      window.setFocusable(isOn);
+      
+      if (isOn) {
+        // Expanding to edit mode
+        window.setFocusable(true);
+        // Use higher stacking level to ensure it stays on top during editing
+        window.setAlwaysOnTop(true, 'modal-panel');
+        // Force window to front for immediate visibility
+        window.moveTop();
+      } else {
+        // Collapsing from edit mode
+        window.setFocusable(false);
+        // Return to normal overlay stacking level
+        window.setAlwaysOnTop(true, 'floating');
+      }
     }
+    
     this.broadcast(IpcChannel.OVERLAY_EDIT_MODE_CHANGED, { isEditMode: isOn });
 
-    // When entering edit mode, explicitly focus the primary window.
+    // When entering edit mode, explicitly focus the primary window for immediate typing
     if (this.isEditMode) {
       const primaryDisplay = screen.getPrimaryDisplay();
       const primaryWindow = this.overlayWindows.get(primaryDisplay.id);

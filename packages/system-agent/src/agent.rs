@@ -1,17 +1,23 @@
 use crate::cmd::{Command, RegisterCommand};
-use crate::hotkey::{parse_shortcut, HotkeyDef};
+use crossbeam_channel::{unbounded, Receiver, Sender};
+use global_hotkey::{
+    hotkey::HotKey,
+    GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState,
+};
 use rdev::{listen, EventType, Key};
 use serde::Serialize;
 use serde_json::Deserializer;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::io::{self, stdout, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::thread;
 
-type HotkeyState = Arc<RwLock<Vec<HotkeyDef>>>;
-type PressedKeysState = Arc<RwLock<HashSet<Key>>>;
-type ActiveHotkeysState = Arc<RwLock<HashSet<String>>>;
+#[derive(Debug)]
+enum HotkeyManagerCommand {
+    Register { id: String, shortcut: String },
+    Unregister { id: String, shortcut: String },
+}
 
 #[derive(Serialize, Debug)]
 struct OutputEvent<'a> {
@@ -33,10 +39,7 @@ struct ErrorEvent<'a> {
 }
 
 pub struct SystemAgent {
-    registered_hotkeys: HotkeyState,
-    pressed_keys: PressedKeysState,
     running: Arc<AtomicBool>,
-    active_hotkeys: ActiveHotkeysState,
 }
 
 impl SystemAgent {
@@ -49,35 +52,239 @@ impl SystemAgent {
         .expect("Error setting Ctrl-C handler");
 
         Self {
-            registered_hotkeys: Arc::new(RwLock::new(Vec::new())),
-            pressed_keys: Arc::new(RwLock::new(HashSet::new())),
             running,
-            active_hotkeys: Arc::new(RwLock::new(HashSet::new())),
         }
     }
 
     pub fn run(&self) {
-        eprintln!("[system-agent] Starting...");
+        eprintln!("[system-agent] Starting hybrid hotkey system (registration + streaming)...");
         
-        let hotkeys_clone = self.registered_hotkeys.clone();
-        let running_clone = self.running.clone();
-        let stdin_thread = thread::spawn(move || {
-            command_listener(hotkeys_clone, running_clone);
+        // Create channel for communication between command listener and hotkey manager
+        let (cmd_sender, cmd_receiver) = unbounded::<HotkeyManagerCommand>();
+        
+        // Thread 1: Hotkey Registration and Command Handling
+        let running_clone1 = self.running.clone();
+        let hotkey_thread = thread::spawn(move || {
+            hotkey_registration_thread(cmd_receiver, running_clone1);
         });
 
-        let hotkeys_clone_2 = self.registered_hotkeys.clone();
-        let pressed_keys_clone = self.pressed_keys.clone();
-        let running_clone_2 = self.running.clone();
-        let active_hotkeys_clone = self.active_hotkeys.clone();
-        event_listener(hotkeys_clone_2, pressed_keys_clone, running_clone_2, active_hotkeys_clone);
+        // Thread 2: Raw Key Event Streaming
+        let running_clone2 = self.running.clone();
+        let rdev_thread = thread::spawn(move || {
+            raw_key_streaming_thread(running_clone2);
+        });
 
-        eprintln!("[system-agent] Event listener exited. Waiting for stdin thread to finish...");
+        // Thread 3: Command Listener (reads from stdin)
+        let running_clone3 = self.running.clone();
+        let stdin_thread = thread::spawn(move || {
+            command_listener(cmd_sender, running_clone3);
+        });
+
+        eprintln!("[system-agent] All threads started. Waiting for completion...");
+        
+        // Wait for all threads to complete
         stdin_thread.join().expect("Stdin thread panicked");
+        hotkey_thread.join().expect("Hotkey thread panicked");
+        rdev_thread.join().expect("Rdev thread panicked");
+        
         eprintln!("[system-agent] Shutdown complete.");
     }
 }
 
-fn command_listener(hotkeys: HotkeyState, running: Arc<AtomicBool>) {
+fn hotkey_registration_thread(
+    command_receiver: Receiver<HotkeyManagerCommand>,
+    running: Arc<AtomicBool>,
+) {
+    eprintln!("[system-agent] Hotkey registration thread starting...");
+    
+    // Initialize the global hotkey manager
+    let manager = match GlobalHotKeyManager::new() {
+        Ok(m) => m,
+        Err(e) => {
+            let msg = format!("Failed to initialize global hotkey manager: {}", e);
+            eprintln!("[system-agent] {}", msg);
+            send_event(&ErrorEvent { 
+                event: "error", 
+                message: msg, 
+                context: "hotkey_manager_init" 
+            });
+            return;
+        }
+    };
+    
+    // Keep track of registered hotkeys for cleanup and ID mapping
+    let mut registered_hotkeys: HashMap<String, HotKey> = HashMap::new();
+    let mut id_mapping: HashMap<u32, String> = HashMap::new(); // Map global-hotkey numeric IDs to our string IDs
+    
+    // Create shared data for the event thread using Arc + Mutex
+    let id_mapping_shared = Arc::new(std::sync::Mutex::new(HashMap::<u32, String>::new()));
+    let id_mapping_clone = id_mapping_shared.clone();
+    
+    // Start hotkey event listener in a separate thread
+    let running_clone = running.clone();
+    let event_thread = thread::spawn(move || {
+        eprintln!("[system-agent] Hotkey event listener starting...");
+        
+        while running_clone.load(Ordering::SeqCst) {
+            if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
+                eprintln!("[system-agent] Global hotkey triggered: {:?}", event);
+                
+                // Only process "Pressed" state to avoid duplicate events
+                if event.state == HotKeyState::Pressed {
+                    // Look up the original string ID from our mapping
+                    let id = {
+                        let mapping = id_mapping_clone.lock().unwrap();
+                        mapping.get(&event.id).cloned()
+                    };
+                    
+                    if let Some(original_id) = id {
+                        eprintln!("[system-agent] Sending hotkey_pressed event for: {}", original_id);
+                        send_event(&OutputEvent { 
+                            event: "hotkey_pressed", 
+                            id: &original_id 
+                        });
+                    } else {
+                        eprintln!("[system-agent] Warning: Received hotkey event for unknown ID: {}", event.id);
+                    }
+                }
+            }
+            
+            // Small delay to prevent busy waiting
+            thread::sleep(std::time::Duration::from_millis(10));
+        }
+        
+        eprintln!("[system-agent] Hotkey event listener exited.");
+    });
+    
+    // Process commands from the command listener thread
+    while running.load(Ordering::SeqCst) {
+        if let Ok(command) = command_receiver.try_recv() {
+            match command {
+                HotkeyManagerCommand::Register { id, shortcut } => {
+                    match parse_hotkey(&shortcut) {
+                        Ok(hotkey) => {
+                            // Get the hotkey ID before registering
+                            let hotkey_id = hotkey.id();
+                            
+                            match manager.register(hotkey) {
+                                Ok(()) => {
+                                    eprintln!("[system-agent] Successfully registered global hotkey: {} -> {} (ID: {})", id, shortcut, hotkey_id);
+                                    registered_hotkeys.insert(id.clone(), hotkey);
+                                    
+                                    // Store the ID mapping for event lookup
+                                    {
+                                        let mut mapping = id_mapping_shared.lock().unwrap();
+                                        mapping.insert(hotkey_id, id.clone());
+                                    }
+                                    id_mapping.insert(hotkey_id, id.clone());
+                                }
+                                Err(e) => {
+                                    let msg = format!("Failed to register global hotkey {}: {}", shortcut, e);
+                                    eprintln!("[system-agent] {}", msg);
+                                    send_event(&ErrorEvent { 
+                                        event: "error", 
+                                        message: msg, 
+                                        context: "hotkey_register" 
+                                    });
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            let msg = format!("Failed to parse hotkey {}: {}", shortcut, e);
+                            eprintln!("[system-agent] {}", msg);
+                            send_event(&ErrorEvent { 
+                                event: "error", 
+                                message: msg, 
+                                context: "hotkey_parse" 
+                            });
+                        }
+                    }
+                }
+                HotkeyManagerCommand::Unregister { id, shortcut: _shortcut } => {
+                    if let Some(hotkey) = registered_hotkeys.remove(&id) {
+                        let hotkey_id = hotkey.id();
+                        
+                        match manager.unregister(hotkey) {
+                            Ok(()) => {
+                                eprintln!("[system-agent] Successfully unregistered global hotkey: {} (ID: {})", id, hotkey_id);
+                                
+                                // Remove from ID mapping
+                                {
+                                    let mut mapping = id_mapping_shared.lock().unwrap();
+                                    mapping.remove(&hotkey_id);
+                                }
+                                id_mapping.remove(&hotkey_id);
+                            }
+                            Err(e) => {
+                                let msg = format!("Failed to unregister global hotkey {}: {}", id, e);
+                                eprintln!("[system-agent] {}", msg);
+                                send_event(&ErrorEvent { 
+                                    event: "error", 
+                                    message: msg, 
+                                    context: "hotkey_unregister" 
+                                });
+                            }
+                        }
+                    } else {
+                        eprintln!("[system-agent] Warning: Attempted to unregister unknown hotkey: {}", id);
+                    }
+                }
+            }
+        }
+        
+        // Small delay to prevent busy waiting
+        thread::sleep(std::time::Duration::from_millis(10));
+    }
+    
+    // Cleanup: unregister all hotkeys
+    eprintln!("[system-agent] Cleaning up registered hotkeys...");
+    for (id, hotkey) in registered_hotkeys {
+        let hotkey_id = hotkey.id();
+        if let Err(e) = manager.unregister(hotkey) {
+            eprintln!("[system-agent] Failed to unregister hotkey {} (ID: {}) during cleanup: {}", id, hotkey_id, e);
+        } else {
+            eprintln!("[system-agent] Cleaned up hotkey: {} (ID: {})", id, hotkey_id);
+        }
+    }
+    
+    event_thread.join().expect("Event thread panicked");
+    eprintln!("[system-agent] Hotkey registration thread exited.");
+}
+
+fn raw_key_streaming_thread(running: Arc<AtomicBool>) {
+    eprintln!("[system-agent] Raw key streaming thread starting...");
+    
+    // This thread's only job is to stream raw key events
+    // All the complex hotkey detection logic has been removed
+    if let Err(error) = listen(move |event| {
+        if !running.load(Ordering::SeqCst) {
+            // This will break the listen closure and cause listen() to return.
+            return;
+        }
+        
+        // Simply stream all key events - no hotkey detection needed
+        match event.event_type {
+            EventType::KeyPress(key) => {
+                send_raw_event("KeyPress", key);
+            }
+            EventType::KeyRelease(key) => {
+                send_raw_event("KeyRelease", key);
+            }
+            _ => (), // Ignore other event types
+        }
+    }) {
+        eprintln!("[system-agent] Raw key streaming error: {:?}", error);
+    }
+    
+    eprintln!("[system-agent] Raw key streaming thread exited.");
+}
+
+fn command_listener(
+    hotkey_sender: Sender<HotkeyManagerCommand>, 
+    running: Arc<AtomicBool>
+) {
+    eprintln!("[system-agent] Command listener starting...");
+    
     let stdin = io::stdin();
     let stream = Deserializer::from_reader(stdin.lock()).into_iter::<Command>();
 
@@ -85,90 +292,67 @@ fn command_listener(hotkeys: HotkeyState, running: Arc<AtomicBool>) {
         if !running.load(Ordering::SeqCst) {
             break;
         }
+        
         match cmd_result {
-            Ok(cmd) => handle_command(cmd, &hotkeys),
+            Ok(cmd) => handle_command(cmd, &hotkey_sender),
             Err(e) => {
                 let msg = format!("Failed to parse command: {}", e);
                 eprintln!("[system-agent] {}", msg);
-                send_event(&ErrorEvent { event: "error", message: msg, context: "command_parse" });
+                send_event(&ErrorEvent { 
+                    event: "error", 
+                    message: msg, 
+                    context: "command_parse" 
+                });
             }
         }
     }
-    eprintln!("[system-agent] Stdin listener loop finished.");
+    
+    eprintln!("[system-agent] Command listener exited.");
 }
 
-fn handle_command(cmd: Command, hotkeys: &HotkeyState) {
+fn handle_command(cmd: Command, hotkey_sender: &Sender<HotkeyManagerCommand>) {
     match cmd {
         Command::Register(RegisterCommand { id, shortcut }) => {
-            if let Some(def) = parse_shortcut(&id, &shortcut) {
-                eprintln!("[system-agent] Registering: {:?}", def);
-                let mut hotkeys_lock = hotkeys.write().unwrap();
-                if !hotkeys_lock.contains(&def) {
-                    hotkeys_lock.push(def);
-                }
+            eprintln!("[system-agent] Received register command: {} -> {}", id, shortcut);
+            
+            if let Err(e) = hotkey_sender.send(HotkeyManagerCommand::Register { 
+                id: id.clone(), 
+                shortcut: shortcut.clone() 
+            }) {
+                let msg = format!("Failed to send register command to hotkey manager: {}", e);
+                eprintln!("[system-agent] {}", msg);
+                send_event(&ErrorEvent { 
+                    event: "error", 
+                    message: msg, 
+                    context: "command_send" 
+                });
             }
         }
         Command::Unregister(RegisterCommand { id, shortcut }) => {
-            if let Some(def) = parse_shortcut(&id, &shortcut) {
-                eprintln!("[system-agent] Unregistering: {:?}", def);
-                let mut hotkeys_lock = hotkeys.write().unwrap();
-                hotkeys_lock.retain(|h| h != &def);
+            eprintln!("[system-agent] Received unregister command: {} -> {}", id, shortcut);
+            
+            if let Err(e) = hotkey_sender.send(HotkeyManagerCommand::Unregister { 
+                id: id.clone(), 
+                shortcut: shortcut.clone() 
+            }) {
+                let msg = format!("Failed to send unregister command to hotkey manager: {}", e);
+                eprintln!("[system-agent] {}", msg);
+                send_event(&ErrorEvent { 
+                    event: "error", 
+                    message: msg, 
+                    context: "command_send" 
+                });
             }
         }
     }
 }
 
-fn event_listener(
-    hotkeys: HotkeyState,
-    pressed: PressedKeysState,
-    running: Arc<AtomicBool>,
-    active_hotkeys: ActiveHotkeysState,
-) {
-    if let Err(error) = listen(move |event| {
-        if !running.load(Ordering::SeqCst) {
-            // This will break the listen closure and cause listen() to return.
-            return;
-        }
-        let mut pressed_lock = pressed.write().unwrap();
-        match event.event_type {
-            EventType::KeyPress(key) => {
-                pressed_lock.insert(key);
-                let hotkeys_lock = hotkeys.read().unwrap();
-                let mut active_lock = active_hotkeys.write().unwrap();
-
-                for def in hotkeys_lock.iter() {
-                    // Check if all keys for the hotkey are pressed and it's not already active.
-                    if def.keys.is_subset(&pressed_lock) && !active_lock.contains(&def.id) {
-                        eprintln!("[system-agent] Hotkey match found: {:?}", def);
-                        send_event(&OutputEvent { event: "hotkey_pressed", id: &def.id });
-                        // Mark the hotkey as active to prevent re-firing.
-                        active_lock.insert(def.id.clone());
-                    }
-                }
-                send_raw_event("KeyPress", key);
-            }
-            EventType::KeyRelease(key) => {
-                pressed_lock.remove(&key);
-                let hotkeys_lock = hotkeys.read().unwrap();
-                let mut active_lock = active_hotkeys.write().unwrap();
-
-                // Check if the released key was part of any registered hotkey.
-                // If so, deactivate that hotkey so it can be fired again.
-                for def in hotkeys_lock.iter() {
-                    if def.keys.contains(&key) && active_lock.contains(&def.id) {
-                        active_lock.remove(&def.id);
-                    }
-                }
-
-                send_raw_event("KeyRelease", key);
-            }
-            _ => (),
-        }
-    }) {
-        eprintln!("[system-agent] Error: {:?}", error);
-    }
+fn parse_hotkey(shortcut: &str) -> Result<HotKey, String> {
+    // Parse shortcuts like "Control+Alt+T" or "Shift+F1"
+    // The global-hotkey crate can parse from string directly
+    shortcut.parse::<HotKey>()
+        .map_err(|e| format!("Parse error: {}", e))
 }
-
 
 fn send_event<T: Serialize>(event: &T) {
     if let Ok(json) = serde_json::to_string(event) {

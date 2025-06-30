@@ -1,6 +1,5 @@
 mod agent;
 mod cmd;
-mod hotkey;
 
 use agent::SystemAgent;
 
