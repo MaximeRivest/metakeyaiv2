@@ -33,18 +33,25 @@ export class HotkeyEngine extends EventEmitter {
   }
 
   public registerBindings(bindings: HotkeyBinding[]): void {
-    // Unregister each previously registered binding individually.
-    for (const oldBinding of this.bindings.values()) {
-      this.options.systemAgentService.unregisterHotkey(oldBinding.shortcut, oldBinding.shortcut);
+    console.log(`[HotkeyEngine] Registering ${bindings.length} hotkey bindings using batch operation`);
+    
+    // Step 1: Unregister all existing hotkeys with a single command
+    this.options.systemAgentService.unregisterAllHotkeys();
+    
+    // Step 2: Register new hotkeys in batch, but only for actions that have handlers
+    const hotkeysToRegister = bindings
+      .filter(binding => this.actions.has(binding.actionId))
+      .map(binding => ({
+        id: binding.shortcut,  // Use shortcut as the unique ID
+        shortcut: binding.shortcut
+      }));
+    
+    if (hotkeysToRegister.length > 0) {
+      this.options.systemAgentService.registerHotkeys(hotkeysToRegister);
     }
     
-    for (const binding of bindings) {
-      if (this.actions.has(binding.actionId)) {
-        // Tell the system agent to use the shortcut as the unique ID.
-        this.options.systemAgentService.registerHotkey(binding.shortcut, binding.shortcut);
-      }
-    }
     this.bindings = new Map(bindings.map(b => [b.shortcut, b]));
+    console.log(`[HotkeyEngine] Successfully registered ${hotkeysToRegister.length} hotkeys`);
   }
 
   public registerAction(actionId: string, handler: (binding: HotkeyBinding) => Promise<void> | void): void {

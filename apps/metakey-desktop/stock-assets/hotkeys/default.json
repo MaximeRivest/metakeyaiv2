@@ -32,7 +32,15 @@
       "actionId": "overlay:toggle-edit-mode"
     },
     {
+      "shortcut": "Control+Alt+0",
+      "actionId": "overlay:toggle-edit-mode"
+    },
+    {
       "shortcut": "Control+Alt+B",
+      "actionId": "overlay:toggle-spellbook"
+    },
+    {
+      "shortcut": "Control+Alt+S",
       "actionId": "overlay:toggle-spellbook"
     },
     {

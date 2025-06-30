@@ -60,18 +60,33 @@
   --mx-stats-value-color: #2d3748;
   --mx-stats-grid-gap: 16px;
 
-  /* Spellbook Widget - Narrow side panel */
-  --mx-spellbook-width: 20vw;
-  --mx-spellbook-height: 50vh;
-  --mx-spellbook-max-height: 50vh;
-  --mx-spellbook-bg: rgba(255, 255, 255, 0.5);
-  --mx-spell-item-selected-bg: rgba(66, 153, 225, 0.15);
-  --mx-spell-item-shortcut-bg: rgba(113, 128, 150, 0.1);
-  
-  /* Spellbook menu styling */
-  --mx-spellbook-menu-bg: rgba(241, 245, 249, 0.5);
-  --mx-spellbook-menu-item-selected-bg: rgba(224, 231, 239, 0.5);
+  /* Spellbook Widget - Professional MMO Style */
+  --mx-spellbook-width: 480px;
+  --mx-spellbook-height: 340px;
+  --mx-spellbook-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(247, 250, 252, 0.98));
+  --mx-spellbook-border: rgba(203, 213, 225, 0.8);
+  --mx-spellbook-nav-bg: linear-gradient(180deg, rgba(241, 245, 249, 0.9), rgba(226, 232, 240, 0.95));
+  --mx-spellbook-nav-border: rgba(203, 213, 225, 0.7);
+  --mx-spellbook-nav-item-color: rgba(51, 65, 85, 0.8);
+  --mx-spellbook-nav-item-hover-bg: rgba(226, 232, 240, 0.8);
+  --mx-spellbook-nav-item-hover-color: rgb(51, 65, 85);
+  --mx-spellbook-nav-item-active-bg: linear-gradient(135deg, #1e40af, #1d4ed8);
+  --mx-spellbook-content-bg: rgba(255, 255, 255, 0.5);
   --mx-spellbook-grid-columns: 2;
+  
+  /* Professional spell items */
+  --mx-spell-item-bg: rgba(255, 255, 255, 0.8);
+  --mx-spell-item-border: rgba(203, 213, 225, 0.7);
+  --mx-spell-item-hover-bg: rgba(255, 255, 255, 0.95);
+  --mx-spell-item-hover-border: rgba(59, 130, 246, 0.4);
+  --mx-spell-item-active-bg: rgba(59, 130, 246, 0.1);
+  --mx-spell-title-color: rgb(30, 41, 59);
+  --mx-spell-shortcut-color: rgba(51, 65, 85, 0.7);
+  --mx-spell-shortcut-bg: rgba(226, 232, 240, 0.8);
+  
+  /* Professional placeholders */
+  --mx-placeholder-icon-color: rgba(100, 116, 139, 0.7);
+  --mx-placeholder-text-color: rgba(71, 85, 105, 0.8);
 
   /* Professional accent color */
   --mx-accent: #3b82f6;

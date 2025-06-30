@@ -17,6 +17,8 @@ use std::thread;
 enum HotkeyManagerCommand {
     Register { id: String, shortcut: String },
     Unregister { id: String, shortcut: String },
+    RegisterBatch { hotkeys: Vec<(String, String)> },
+    UnregisterAll,
 }
 
 #[derive(Serialize, Debug)]
@@ -158,7 +160,7 @@ fn hotkey_registration_thread(
     
     // Process commands from the command listener thread
     while running.load(Ordering::SeqCst) {
-        if let Ok(command) = command_receiver.try_recv() {
+        if let Ok(command) = command_receiver.recv_timeout(std::time::Duration::from_micros(100)) {
             match command {
                 HotkeyManagerCommand::Register { id, shortcut } => {
                     match parse_hotkey(&shortcut) {
@@ -229,11 +231,83 @@ fn hotkey_registration_thread(
                         eprintln!("[system-agent] Warning: Attempted to unregister unknown hotkey: {}", id);
                     }
                 }
+                HotkeyManagerCommand::RegisterBatch { hotkeys } => {
+                    eprintln!("[system-agent] Processing register_batch with {} hotkeys", hotkeys.len());
+                    
+                    for (id, shortcut) in hotkeys {
+                        match parse_hotkey(&shortcut) {
+                            Ok(hotkey) => {
+                                // Get the hotkey ID before registering
+                                let hotkey_id = hotkey.id();
+                                
+                                match manager.register(hotkey) {
+                                    Ok(()) => {
+                                        eprintln!("[system-agent] Successfully registered global hotkey: {} -> {} (ID: {})", id, shortcut, hotkey_id);
+                                        registered_hotkeys.insert(id.clone(), hotkey);
+                                        
+                                        // Store the ID mapping for event lookup
+                                        {
+                                            let mut mapping = id_mapping_shared.lock().unwrap();
+                                            mapping.insert(hotkey_id, id.clone());
+                                        }
+                                        id_mapping.insert(hotkey_id, id.clone());
+                                    }
+                                    Err(e) => {
+                                        let msg = format!("Failed to register global hotkey {}: {}", shortcut, e);
+                                        eprintln!("[system-agent] {}", msg);
+                                        send_event(&ErrorEvent { 
+                                            event: "error", 
+                                            message: msg, 
+                                            context: "hotkey_register_batch" 
+                                        });
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                let msg = format!("Failed to parse hotkey {}: {}", shortcut, e);
+                                eprintln!("[system-agent] {}", msg);
+                                send_event(&ErrorEvent { 
+                                    event: "error", 
+                                    message: msg, 
+                                    context: "hotkey_parse_batch" 
+                                });
+                            }
+                        }
+                    }
+                }
+                HotkeyManagerCommand::UnregisterAll => {
+                    eprintln!("[system-agent] Processing unregister_all command");
+                    
+                    // Unregister all hotkeys from the manager
+                    for (id, hotkey) in registered_hotkeys.drain() {
+                        let hotkey_id = hotkey.id();
+                        
+                        match manager.unregister(hotkey) {
+                            Ok(()) => {
+                                eprintln!("[system-agent] Successfully unregistered global hotkey: {} (ID: {})", id, hotkey_id);
+                            }
+                            Err(e) => {
+                                let msg = format!("Failed to unregister global hotkey {}: {}", id, e);
+                                eprintln!("[system-agent] {}", msg);
+                                send_event(&ErrorEvent { 
+                                    event: "error", 
+                                    message: msg, 
+                                    context: "hotkey_unregister_all" 
+                                });
+                            }
+                        }
+                    }
+                    
+                    // Clear ID mappings
+                    {
+                        let mut mapping = id_mapping_shared.lock().unwrap();
+                        mapping.clear();
+                    }
+                    id_mapping.clear();
+                }
             }
         }
-        
-        // Small delay to prevent busy waiting
-        thread::sleep(std::time::Duration::from_millis(10));
+        // Note: recv_timeout already provides the necessary delay, no need for additional sleep
     }
     
     // Cleanup: unregister all hotkeys
@@ -336,6 +410,36 @@ fn handle_command(cmd: Command, hotkey_sender: &Sender<HotkeyManagerCommand>) {
                 shortcut: shortcut.clone() 
             }) {
                 let msg = format!("Failed to send unregister command to hotkey manager: {}", e);
+                eprintln!("[system-agent] {}", msg);
+                send_event(&ErrorEvent { 
+                    event: "error", 
+                    message: msg, 
+                    context: "command_send" 
+                });
+            }
+        }
+        Command::RegisterBatch { hotkeys } => {
+            eprintln!("[system-agent] Received register_batch command with {} hotkeys", hotkeys.len());
+            
+            let batch_hotkeys: Vec<(String, String)> = hotkeys.into_iter()
+                .map(|cmd| (cmd.id, cmd.shortcut))
+                .collect();
+            
+            if let Err(e) = hotkey_sender.send(HotkeyManagerCommand::RegisterBatch { hotkeys: batch_hotkeys }) {
+                let msg = format!("Failed to send register_batch command to hotkey manager: {}", e);
+                eprintln!("[system-agent] {}", msg);
+                send_event(&ErrorEvent { 
+                    event: "error", 
+                    message: msg, 
+                    context: "command_send" 
+                });
+            }
+        }
+        Command::UnregisterAll => {
+            eprintln!("[system-agent] Received unregister_all command");
+            
+            if let Err(e) = hotkey_sender.send(HotkeyManagerCommand::UnregisterAll) {
+                let msg = format!("Failed to send unregister_all command to hotkey manager: {}", e);
                 eprintln!("[system-agent] {}", msg);
                 send_event(&ErrorEvent { 
                     event: "error", 

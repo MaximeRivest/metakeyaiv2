@@ -66,7 +66,34 @@
   --mx-spell-item-selected-bg: rgba(255, 255, 255, 0.1);
   --mx-spell-item-shortcut-bg: rgba(0,0,0,0.3);
   
-  --mx-spellbook-menu-bg: rgba(0,0,0,0.2);
-  --mx-spellbook-menu-item-selected-bg: rgba(255, 255, 255, 0.37);
-  --mx-spellbook-grid-columns: 4;
+  /* Spellbook modern styling */
+  --mx-spellbook-width: 520px;
+  --mx-spellbook-height: 360px;
+  --mx-spellbook-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+  --mx-spellbook-border: rgba(226, 232, 240, 0.8);
+  --mx-spellbook-nav-bg: linear-gradient(180deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.9));
+  --mx-spellbook-nav-border: rgba(226, 232, 240, 0.6);
+  --mx-spellbook-nav-item-color: rgba(71, 85, 105, 0.8);
+  --mx-spellbook-nav-item-hover-bg: rgba(241, 245, 249, 0.8);
+  --mx-spellbook-nav-item-hover-color: rgb(71, 85, 105);
+  --mx-spellbook-nav-item-active-bg: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  --mx-spellbook-content-bg: rgba(255, 255, 255, 0.4);
+  --mx-spellbook-grid-columns: 3;
+  
+  /* Spell items */
+  --mx-spell-item-bg: rgba(255, 255, 255, 0.7);
+  --mx-spell-item-border: rgba(226, 232, 240, 0.6);
+  --mx-spell-item-hover-bg: rgba(255, 255, 255, 0.9);
+  --mx-spell-item-hover-border: rgba(59, 130, 246, 0.3);
+  --mx-spell-item-active-bg: rgba(59, 130, 246, 0.1);
+  --mx-spell-title-color: rgb(51, 65, 85);
+  --mx-spell-shortcut-color: rgba(71, 85, 105, 0.7);
+  --mx-spell-shortcut-bg: rgba(241, 245, 249, 0.8);
+  
+  /* Placeholders */
+  --mx-placeholder-icon-color: rgba(148, 163, 184, 0.8);
+  --mx-placeholder-text-color: rgba(100, 116, 139, 0.8);
+  
+  /* Accent colors */
+  --mx-accent: #3b82f6;
 }

@@ -162,9 +162,22 @@ export type IpcInvokeSignatures = {
   [IpcChannel.SPELL_EXECUTE]: (payload: { spellId: string }) => Promise<void>;
 };
 
+/**
+ * Icon names for spellbook menu items
+ */
+export enum SpellbookMenuIcon {
+  SPELLS = 'book-open',
+  ECHOES = 'clock-rotate-left',
+  THEMES = 'palette',
+  SETTINGS = 'settings',
+  SEARCH = 'search',
+  FAVORITES = 'heart'
+}
+
 export interface SpellbookMenuItem {
   id: string;
   label: string;
+  icon: SpellbookMenuIcon;
   hotkey?: string;
 }
 

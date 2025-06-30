@@ -7,6 +7,10 @@ pub enum Command {
     Register(RegisterCommand),
     #[serde(rename = "unregister")]
     Unregister(RegisterCommand),
+    #[serde(rename = "register_batch")]
+    RegisterBatch { hotkeys: Vec<RegisterCommand> },
+    #[serde(rename = "unregister_all")]
+    UnregisterAll,
 }
 
 #[derive(Deserialize, Debug, Clone)]

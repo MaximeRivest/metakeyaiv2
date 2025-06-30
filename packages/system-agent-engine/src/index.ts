@@ -37,6 +37,7 @@ export class SystemAgentService extends EventEmitter {
   }
 
   private handleStdout(data: Buffer): void {
+    console.log(`[system-agent-stdout]: ${data.toString().trim()}`);
     const messages = data.toString().trim().split('\n');
     for (const message of messages) {
       if (message) {
@@ -88,6 +89,7 @@ export class SystemAgentService extends EventEmitter {
       // It's okay if the agent is not running, we just can't send the command.
       return;
     }
+    console.log(`Sending command to unregister hotkey "${shortcut}" with id "${id}"`);
     const command = {
       command: 'unregister',
       shortcut: shortcut,
@@ -100,8 +102,24 @@ export class SystemAgentService extends EventEmitter {
     if (!this.agentProcess) {
       return;
     }
+    console.log('Sending command to unregister all hotkeys');
     const command = { command: 'unregister_all' };
     this.agentProcess.stdin?.write(JSON.stringify(command) + '\n');
+  }
+
+  public registerHotkeys(bindings: { id: string; shortcut: string }[]): void {
+    if (!this.agentProcess) {
+      console.error('Cannot register hotkeys: System Agent is not running.');
+      return;
+    }
+
+    const command = {
+      command: 'register_batch',
+      hotkeys: bindings,
+    };
+
+    this.agentProcess.stdin?.write(JSON.stringify(command) + '\n');
+    console.log(`Sent command to register ${bindings.length} hotkeys in batch`);
   }
 
   private handleClose(code: number): void {
