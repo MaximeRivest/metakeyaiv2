@@ -51,4 +51,3 @@ If I have navigating though my os and I have a folder selected, I could do c-m-f
 
 doing ctrl-alt-n (or insert or anything else custom picked by user) would creat a new clipboard track and set it, I could then go and paste files from my file navigator like: click on file once, c-C to 'render it' with attaachments python library instead of juste copying the name of the paste, and then select another and do c-C again and then write something and c-c it and then select a snippet of a paragraph in a website and then I could do c-m-M and all clipboards would merged into one and I could do c-m-x and ask my question of give my task, and I would get the results in my AI results clipboard track with it's ready (not sure about this, I know I want to be able to send the stuff async but should they land on AI reserved track, in the track that was set when launched or in the current track, should be an option.)
 
-

@@ -28,17 +28,58 @@
       </div>
     </template>
 
-    <template id="template-DebugLog">
-      <div class="widget" data-widget-id="debug-log" data-size="small">
+    <template id="template-Notifications">
+      <div class="widget" data-widget-id="notifications">
           <div class="widget-content">
-            <!-- Container for hotkey trigger notifications -->
-            <div id="hotkey-trigger-display">
+          <div class="notifications-container">
               <!-- Notifications will be added here dynamically -->
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="template-Stats">
+      <div class="widget" data-widget-id="stats" data-size="small">
+        <div class="widget-content">
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">LLM:</span>
+              <span class="stat-value stat-tps">0 t/s</span>
             </div>
-            <!-- Shows currently held keys -->
-            <div id="pressed-keys-display"></div>
+            <div class="stat-item">
+              <span class="stat-label">Tasks:</span>
+              <span class="stat-value stat-tasks">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Keys:</span>
+              <span class="stat-value stat-keys">None</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Tracks:</span>
+              <span class="stat-value stat-tracks">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Clipboard:</span>
+              <span class="stat-value stat-clipboard">0/0</span>
+            </div>
+          </div>
           </div>
       </div>
+    </template>
+
+    <template id="template-SpellBook">
+      <div class="widget" data-widget-id="spell-book">
+        <div class="widget-content">
+          <div class="spellbook-container">
+            <div class="spellbook-menu">
+              <!-- Menu items will be dynamically inserted here -->
+            </div>
+            <div class="spell-grid">
+              <!-- Spell items will be dynamically inserted here -->
+            </div>
+          </div>
+        </div>
+    </div>
     </template>
   </body>
 </html>

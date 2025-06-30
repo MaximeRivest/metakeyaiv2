@@ -1,0 +1,119 @@
+{
+  "id": "magical",
+  "name": "Mystical Realm",
+  "tokens": "tokens.css",
+  "layouts": {
+    "1": {
+      "primary": [
+        {
+          "widgetId": "main-hud",
+          "component": "MainHUD",
+          "size": "orb"
+        },
+        {
+          "widgetId": "notifications",
+          "component": "Notifications",
+          "size": "medium"
+        },
+        {
+          "widgetId": "stats",
+          "component": "Stats",
+          "size": "mini"
+        },
+        {
+          "widgetId": "spell-book",
+          "component": "SpellBook",
+          "role": "spellbook"
+        }
+      ]
+    },
+    "3": {
+      "primary": [
+        {
+          "widgetId": "main-hud",
+          "component": "MainHUD",
+          "size": "orb"
+        },
+        {
+          "widgetId": "spell-book",
+          "component": "SpellBook",
+          "role": "spellbook"
+        }
+      ],
+      "secondary": [
+        [],
+        [
+          {
+            "widgetId": "stats",
+            "component": "Stats",
+            "size": "mini"
+          },
+          {
+            "widgetId": "notifications",
+            "component": "Notifications",
+            "size": "medium"
+          }
+        ]
+      ]
+    },
+    "full": {
+      "primary": [
+        {
+          "widgetId": "main-hud",
+          "component": "MainHUD",
+          "size": "orb",
+          "x": 100,
+          "y": 800
+        },
+        {
+          "widgetId": "spell-book",
+          "component": "SpellBook",
+          "role": "spellbook",
+          "size": "full",
+          "x": 1400,
+          "y": 100
+        },
+        {
+          "widgetId": "stats",
+          "component": "Stats",
+          "size": "small",
+          "x": 1600,
+          "y": 900
+        },
+        {
+          "widgetId": "notifications",
+          "component": "Notifications",
+          "size": "medium"
+        }
+      ]
+    },
+    "default": {
+      "primary": [
+        {
+          "widgetId": "main-hud",
+          "component": "MainHUD",
+          "size": "orb"
+        },
+        {
+          "widgetId": "spell-book",
+          "component": "SpellBook",
+          "role": "spellbook"
+        }
+      ],
+      "secondary": [
+        [
+          {
+            "widgetId": "stats",
+            "component": "Stats",
+            "size": "mini"
+          },
+          {
+            "widgetId": "notifications",
+            "component": "Notifications",
+            "size": "medium"
+          }
+        ]
+      ]
+    }
+  }
+} 

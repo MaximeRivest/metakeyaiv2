@@ -29,28 +29,31 @@ export class SystemAgentService extends EventEmitter {
   }
 
   public stop(): void {
-    this.agentProcess?.kill();
+    if (this.agentProcess) {
+      console.log('[SystemAgentEngine] Stopping system-agent process...');
+      this.agentProcess.kill();
     this.agentProcess = null;
+  }
   }
 
   private handleStdout(data: Buffer): void {
     const messages = data.toString().trim().split('\n');
     for (const message of messages) {
       if (message) {
-        try {
-         const event: SystemAgentEvent = JSON.parse(message);
-         this.emit('event', event); // A generic event
-         // Emit specific events based on the payload
-         if (event.event) {
-           this.emit(event.event, event);
-         } else if (event.event_type) {
-           // Legacy or different event format
+      try {
+        const event: SystemAgentEvent = JSON.parse(message);
+        this.emit('event', event); // A generic event
+        // Emit specific events based on the payload
+        if (event.event) {
+          this.emit(event.event, event);
+        } else if (event.event_type) {
+          // Legacy or different event format
            const eventName = event.event_type.toLowerCase().replace(/_/g, '-');
-           this.emit(eventName, event);
-         }
-       } catch (err) {
-         console.error('Error parsing message from system agent:', message, err);
-         this.emit('error', { message: 'Error parsing agent message', data: message });
+          this.emit(eventName, event);
+        }
+      } catch (err) {
+        console.error('Error parsing message from system agent:', message, err);
+        this.emit('error', { message: 'Error parsing agent message', data: message });
        }
       }
     }

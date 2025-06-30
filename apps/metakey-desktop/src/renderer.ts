@@ -27,8 +27,9 @@
  */
 
 import './index.css';
-import { IpcChannel, OverlayStatus, Theme, KeyEvent, OverlayContent, HotkeyTriggeredPayload, EditModePayload, WidgetConfig, ThemeAndLayout } from 'shared-types';
+import { IpcChannel, OverlayStatus, Theme, KeyEvent, OverlayContent, HotkeyTriggeredPayload, EditModePayload, WidgetConfig, ThemeAndLayout, SpellbookEntry, SpellbookMenuItem } from 'shared-types';
 import { Draggable } from './lib/draggable';
+import { BaseWidget, MainHUDView, NotificationsView, StatsView, SpellbookView } from './views';
 
 declare global {
   interface Window {
@@ -38,8 +39,14 @@ declare global {
       on(channel: IpcChannel.SET_THEME, listener: (payload: ThemeAndLayout) => void): () => void;
       on(channel: IpcChannel.HOTKEY_TRIGGERED, listener: (payload: HotkeyTriggeredPayload) => void): () => void;
       on(channel: IpcChannel.OVERLAY_EDIT_MODE_CHANGED, listener: (payload: EditModePayload) => void): () => void;
+      on(channel: IpcChannel.SPELLBOOK_UPDATE, listener: (payload: { spells: SpellbookEntry[]; menu: SpellbookMenuItem[] }) => void): () => void;
+      on(channel: IpcChannel.SPELL_START, listener: (payload: { spellId: string; metadata: any }) => void): () => void;
+      on(channel: IpcChannel.SPELL_SUCCESS, listener: (payload: { spellId: string; metadata: any; result: { output: string } }) => void): () => void;
+      on(channel: IpcChannel.SPELL_ERROR, listener: (payload: { spellId: string; metadata: any; error: Error }) => void): () => void;
       invoke(channel: IpcChannel.OVERLAY_WIDGET_DRAG_END, payload: { widgetId: string, x: number, y: number }): Promise<void>;
       invoke(channel: IpcChannel.LOAD_THEME, themeId: string): Promise<Theme>;
+      invoke(channel: IpcChannel.SPELLBOOK_CLOSE_REQUEST): Promise<void>;
+      invoke(channel: IpcChannel.SPELL_EXECUTE, payload: { spellId: string }): Promise<void>;
     };
   }
 }
@@ -47,37 +54,37 @@ declare global {
 class Renderer {
   private overlayRoot: HTMLElement;
   private activeDraggables: Draggable[] = [];
-
-  // These elements are dynamic, so we need methods to find them.
-  private get statusMessageEl() { return document.querySelector<HTMLElement>('.status-message'); }
-  private get contentDisplayEl() { return document.querySelector<HTMLElement>('#content-display'); }
-  private get contentTitleEl() { return document.querySelector<HTMLElement>('#content-title'); }
-  private get contentBodyEl() { return document.querySelector<HTMLElement>('#content-body'); }
-  private get pressedKeysDisplayEl() { return document.querySelector<HTMLElement>('#pressed-keys-display'); }
-  private get hotkeyTriggerDisplayEl() { return document.querySelector<HTMLElement>('#hotkey-trigger-display'); }
+  private widgets: BaseWidget[] = [];
+  
+  // Widget instances
+  private mainHUDView: MainHUDView | null = null;
+  private notificationsView: NotificationsView | null = null;
+  private statsView: StatsView | null = null;
+  private spellbookView: SpellbookView | null = null;
 
   constructor() {
     this.overlayRoot = document.getElementById('overlay-root');
     if (!this.overlayRoot) {
-      console.error('#overlay-root not found -- check your HTML');
-      return;
-    }
-
+    console.error('#overlay-root not found -- check your HTML');
+    return;
+  }
+  
     this.init();
   }
 
   private init() {
     console.log('👋 This message is being logged by "renderer.ts", included via webpack');
 
-    const themeStyleTag = document.createElement('link');
-    themeStyleTag.rel = 'stylesheet';
-    document.head.appendChild(themeStyleTag);
+  const themeStyleTag = document.createElement('link');
+  themeStyleTag.rel = 'stylesheet';
+  document.head.appendChild(themeStyleTag);
 
     this.registerIpcListeners();
   }
   
   private renderLayout(layout: WidgetConfig[]) {
-    // Clear any existing widgets
+    // Clean up existing widgets
+    this.cleanupWidgets();
     this.overlayRoot.innerHTML = '';
     
     for (const widgetConfig of layout) {
@@ -109,10 +116,51 @@ class Renderer {
       }
     }
     
+    // Initialize widget views
+    this.initializeWidgets();
+
     // If we are in edit mode, make the new widgets draggable
     if (this.overlayRoot.classList.contains('edit-mode')) {
       this.enableDrag();
     }
+  }
+
+  private initializeWidgets() {
+    // Helper to mount and register widget instances if present
+    const addWidget = <T extends BaseWidget>(widget: T | null): void => {
+      if (!widget) return;
+      widget.mount();
+      if (widget.exists()) {
+        this.widgets.push(widget);
+      }
+    };
+
+    // MainHUD
+    this.mainHUDView = new MainHUDView(this.overlayRoot);
+    addWidget(this.mainHUDView);
+
+    // Notifications
+    this.notificationsView = new NotificationsView();
+    addWidget(this.notificationsView);
+
+    // Stats
+    this.statsView = new StatsView();
+    addWidget(this.statsView);
+
+    // SpellBook
+    this.spellbookView = new SpellbookView();
+    addWidget(this.spellbookView);
+  }
+
+  private cleanupWidgets() {
+    // Destroy all widget instances
+    this.widgets.forEach(widget => widget.destroy());
+    this.widgets = [];
+    
+    this.mainHUDView = null;
+    this.notificationsView = null;
+    this.statsView = null;
+    this.spellbookView = null;
   }
 
   private enableDrag() {
@@ -147,102 +195,72 @@ class Renderer {
 
   private registerIpcListeners() {
     window.ipc.on(IpcChannel.SET_THEME, ({ theme, layout }: ThemeAndLayout) => {
-      const root = document.documentElement;
-      for (const [key, value] of Object.entries(theme.tokens)) {
-        root.style.setProperty(key, value as string);
-      }
+    const root = document.documentElement;
+    for (const [key, value] of Object.entries(theme.tokens)) {
+      root.style.setProperty(key, value as string);
+    }
       this.renderLayout(layout);
     });
 
-    window.ipc.on(IpcChannel.OVERLAY_SET_STATUS, (payload: OverlayStatus) => {
-      const { statusMessageEl, contentDisplayEl, pressedKeysDisplayEl } = this;
-      if (!statusMessageEl) return;
+    window.ipc.on(IpcChannel.SPELLBOOK_UPDATE, (payload) => {
+      this.spellbookView?.update(payload);
+  });
 
-      // Hide content displays when a new status comes in.
-      if (contentDisplayEl) contentDisplayEl.style.display = 'none';
-      if (pressedKeysDisplayEl) pressedKeysDisplayEl.style.display = 'none';
-      statusMessageEl.style.display = 'block';
+  window.ipc.on(IpcChannel.OVERLAY_SET_STATUS, (payload: OverlayStatus) => {
+      this.mainHUDView?.setStatus(payload.status, payload.message);
+  });
 
-      // Remove all state classes first
-      this.overlayRoot.classList.remove('success', 'error', 'idle', 'processing', 'listening');
-
-      // Add the current state class
-      if (payload.status) {
-        this.overlayRoot.classList.add(payload.status);
-      }
-
-      if (payload.message) {
-        statusMessageEl.innerHTML = payload.message;
-      } else {
-        statusMessageEl.innerHTML = '';
-      }
+  window.ipc.on(IpcChannel.OVERLAY_SHOW_CONTENT, (payload: OverlayContent) => {
+    if (payload.type === 'SPELL_RESULT') {
+        this.mainHUDView?.showContent(payload);
+    } else if (payload.type === 'KEY_STREAM') {
+        this.statsView?.showPressedKeys(payload.keys || '');
+    }
+  });
+  
+  window.ipc.on(IpcChannel.HOTKEY_TRIGGERED, (payload: HotkeyTriggeredPayload) => {
+      this.notificationsView?.showNotification(payload);
     });
 
-    window.ipc.on(IpcChannel.OVERLAY_SHOW_CONTENT, (payload: OverlayContent) => {
-      // When showing specific content, hide the generic status message
-      const { statusMessageEl } = this;
-      if (statusMessageEl) {
-        statusMessageEl.style.display = 'none';
-      }
-
-      if (payload.type === 'SPELL_RESULT') {
-        const { contentDisplayEl, contentTitleEl, contentBodyEl } = this;
-        if (contentDisplayEl && contentTitleEl && contentBodyEl) {
-          contentTitleEl.innerText = payload.title;
-          contentBodyEl.innerText = payload.body; // For now, just text. Markdown later.
-          contentDisplayEl.style.display = 'block';
-        }
-      } else if (payload.type === 'KEY_STREAM') {
-        const { pressedKeysDisplayEl } = this;
-        if (pressedKeysDisplayEl) {
-          if (payload.keys && payload.keys.length > 0) {
-            pressedKeysDisplayEl.innerText = payload.keys;
-            pressedKeysDisplayEl.style.display = 'block';
-          } else {
-            pressedKeysDisplayEl.style.display = 'none';
-          }
-        }
-      }
-    });
-    
-    window.ipc.on(IpcChannel.HOTKEY_TRIGGERED, (payload: HotkeyTriggeredPayload) => {
-      const { hotkeyTriggerDisplayEl } = this;
-      if (hotkeyTriggerDisplayEl) {
-        hotkeyTriggerDisplayEl.style.opacity = '1'; // Make container visible
-        
-        const triggerEl = document.createElement('div');
-        triggerEl.className = 'trigger-item';
-        triggerEl.innerText = `[${payload.shortcut}] → ${payload.spellTitle}`;
-        
-        hotkeyTriggerDisplayEl.appendChild(triggerEl);
-        
-        const duration = getComputedStyle(document.documentElement)
-          .getPropertyValue('--mx-hotkey-trigger-duration') || '3000ms';
-        
-        const durationMs = parseFloat(duration);
-
-        setTimeout(() => {
-          triggerEl.remove();
-          // Hide container if no more items
-          if (hotkeyTriggerDisplayEl.childElementCount === 0) {
-            hotkeyTriggerDisplayEl.style.opacity = '0';
-          }
-        }, durationMs);
-      }
+    window.ipc.on(IpcChannel.SPELL_START, ({ metadata }) => {
+      this.mainHUDView?.setStatus('processing', `Casting ${metadata.spellTitle || 'spell'}...`);
     });
 
-    window.ipc.on(IpcChannel.OVERLAY_EDIT_MODE_CHANGED, ({ isEditMode }) => {
-      if (isEditMode) {
+    window.ipc.on(IpcChannel.SPELL_SUCCESS, ({ metadata, result }) => {
+      this.mainHUDView?.setStatus('success', 'Spell Complete!');
+      this.mainHUDView?.showSpellResult(metadata.spellTitle || 'Spell Result', result.output);
+    });
+
+    window.ipc.on(IpcChannel.SPELL_ERROR, ({ metadata, error }) => {
+      this.mainHUDView?.setStatus('error', error.message || 'An unknown error occurred.');
+  });
+
+  window.ipc.on(IpcChannel.OVERLAY_EDIT_MODE_CHANGED, ({ isEditMode }) => {
+    if (isEditMode) {
         this.overlayRoot.classList.add('edit-mode');
         this.enableDrag();
-      } else {
+    } else {
         this.overlayRoot.classList.remove('edit-mode');
         this.disableDrag();
-      }
-    });
+    }
+  });
   }
+
+
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (!window.ipc) {
+    console.error('FATAL: The IPC bridge is not available. The preload script likely failed to execute.');
+    // Display a user-friendly error message in the UI
+    document.body.innerHTML = `<div style="color: red; padding: 20px; font-family: system-ui, sans-serif; background: rgba(0,0,0,0.9); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; align-items: center; justify-content: center;">
+      <div style="background: white; padding: 40px; border-radius: 8px; max-width: 500px; text-align: center;">
+        <h1 style="color: #d32f2f; margin-bottom: 16px;">Application Error</h1>
+        <p style="color: #333; margin-bottom: 16px;">Failed to load a critical component. The IPC bridge between the main process and renderer is not available.</p>
+        <p style="color: #666; font-size: 14px;">Please check the developer console for details and restart the application.</p>
+      </div>
+    </div>`;
+    return;
+  }
   new Renderer();
 });

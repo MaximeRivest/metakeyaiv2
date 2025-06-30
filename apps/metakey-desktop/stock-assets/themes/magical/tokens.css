@@ -1,0 +1,78 @@
+:root {
+  /* Magical color palette */
+  --mx-bg: radial-gradient(circle at center, rgba(50, 20, 80, 0.9), rgba(20, 10, 40, 0.95));
+  --mx-text-color: #e8d4ff;
+  --mx-border-radius: 20px;
+  --mx-blur: 20px;
+
+  --mx-success-bg: radial-gradient(circle at center, rgba(50, 180, 120, 0.9), rgba(20, 80, 50, 0.95));
+  --mx-error-bg: radial-gradient(circle at center, rgba(180, 50, 80, 0.9), rgba(80, 20, 30, 0.95));
+
+  --mx-spinner-color: #b794f6;
+  --mx-spinner-secondary-color: rgba(183, 148, 246, 0.3);
+
+  /* Typography */
+  --mx-font-size-s: 13px;
+  --mx-font-size-m: 17px;
+  --mx-font-size-l: 24px;
+
+  /* Layout */
+  --mx-event-log-position-bottom: 20px;
+  --mx-event-log-position-right: 20px;
+  --mx-event-log-position-left: auto;
+  --mx-event-log-position-top: auto;
+
+  /* Widget Sizes */
+  --mx-widget-orb-diameter: 120px;
+  --mx-widget-mini-diameter: 150px;
+  --mx-widget-small-w: 320px;
+  --mx-widget-small-h: 200px;
+  --mx-widget-medium-w: 450px;
+  --mx-widget-medium-h: 280px;
+  --mx-widget-full-w: 600px;
+  --mx-widget-full-h: 80vh;
+
+  /* Widget Styles */
+  --mx-widget-bg: radial-gradient(ellipse at top, rgba(60, 30, 90, 0.95), rgba(30, 15, 45, 0.98));
+  --mx-widget-border-color: rgba(200, 150, 255, 0.4);
+  --mx-widget-border-radius: 24px;
+  --mx-widget-padding: 20px;
+  --mx-widget-shadow: 0 0 60px rgba(150, 100, 255, 0.3), 0 0 120px rgba(100, 50, 200, 0.2);
+  
+  --mx-success-border-color: rgba(100, 255, 180, 0.8);
+  --mx-error-border-color: rgba(255, 100, 150, 0.8);
+
+  /* Magical Animations */
+  --mx-hotkey-trigger-duration: 4000ms;
+  --mx-hotkey-trigger-animation-speed: 800ms;
+
+  /* Magical Notifications */
+  --mx-notification-duration: 4000ms;
+  --mx-notification-animation-style: pop; /* slide, fade, pop */
+  --mx-notification-bg: linear-gradient(135deg, rgba(80, 50, 120, 0.95), rgba(50, 30, 80, 0.95));
+  --mx-notification-border: 2px solid rgba(200, 150, 255, 0.5);
+  --mx-notification-shadow: 0 0 30px rgba(150, 100, 255, 0.5), 0 10px 40px rgba(0, 0, 0, 0.4);
+  
+  /* Mystical Stats Widget */
+  --mx-stats-bg: radial-gradient(circle at center, rgba(40, 20, 60, 0.95), rgba(20, 10, 30, 0.98));
+  --mx-stats-label-color: rgba(200, 150, 255, 0.7);
+  --mx-stats-value-color: #f0d9ff;
+  --mx-stats-grid-gap: 16px;
+
+  /* Spellbook Widget */
+  --mx-spellbook-width: 600px;
+  --mx-spellbook-height: 400px;
+  --mx-spellbook-max-height: 80vh;
+  --mx-spellbook-bg: linear-gradient(135deg, rgba(50, 30, 80, 0.98), rgba(30, 20, 50, 0.98));
+  --mx-spell-item-selected-bg: rgba(200, 150, 255, 0.2);
+  --mx-spell-item-shortcut-bg: rgba(0, 0, 0, 0.5);
+  
+  --mx-spellbook-menu-bg: rgba(0, 0, 0, 0.4);
+  --mx-spellbook-menu-item-selected-bg: rgba(200, 150, 255, 0.3);
+  --mx-spellbook-grid-columns: 3;
+
+  /* Magical glows and effects */
+  --mx-glow-primary: rgba(200, 150, 255, 0.6);
+  --mx-glow-secondary: rgba(150, 100, 255, 0.4);
+  --mx-pulse-duration: 3s;
+} 

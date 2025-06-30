@@ -11,6 +11,7 @@ use std::thread;
 
 type HotkeyState = Arc<RwLock<Vec<HotkeyDef>>>;
 type PressedKeysState = Arc<RwLock<HashSet<Key>>>;
+type ActiveHotkeysState = Arc<RwLock<HashSet<String>>>;
 
 #[derive(Serialize, Debug)]
 struct OutputEvent<'a> {
@@ -35,6 +36,7 @@ pub struct SystemAgent {
     registered_hotkeys: HotkeyState,
     pressed_keys: PressedKeysState,
     running: Arc<AtomicBool>,
+    active_hotkeys: ActiveHotkeysState,
 }
 
 impl SystemAgent {
@@ -50,6 +52,7 @@ impl SystemAgent {
             registered_hotkeys: Arc::new(RwLock::new(Vec::new())),
             pressed_keys: Arc::new(RwLock::new(HashSet::new())),
             running,
+            active_hotkeys: Arc::new(RwLock::new(HashSet::new())),
         }
     }
 
@@ -65,7 +68,8 @@ impl SystemAgent {
         let hotkeys_clone_2 = self.registered_hotkeys.clone();
         let pressed_keys_clone = self.pressed_keys.clone();
         let running_clone_2 = self.running.clone();
-        event_listener(hotkeys_clone_2, pressed_keys_clone, running_clone_2);
+        let active_hotkeys_clone = self.active_hotkeys.clone();
+        event_listener(hotkeys_clone_2, pressed_keys_clone, running_clone_2, active_hotkeys_clone);
 
         eprintln!("[system-agent] Event listener exited. Waiting for stdin thread to finish...");
         stdin_thread.join().expect("Stdin thread panicked");
@@ -114,7 +118,12 @@ fn handle_command(cmd: Command, hotkeys: &HotkeyState) {
     }
 }
 
-fn event_listener(hotkeys: HotkeyState, pressed: PressedKeysState, running: Arc<AtomicBool>) {
+fn event_listener(
+    hotkeys: HotkeyState,
+    pressed: PressedKeysState,
+    running: Arc<AtomicBool>,
+    active_hotkeys: ActiveHotkeysState,
+) {
     if let Err(error) = listen(move |event| {
         if !running.load(Ordering::SeqCst) {
             // This will break the listen closure and cause listen() to return.
@@ -125,16 +134,32 @@ fn event_listener(hotkeys: HotkeyState, pressed: PressedKeysState, running: Arc<
             EventType::KeyPress(key) => {
                 pressed_lock.insert(key);
                 let hotkeys_lock = hotkeys.read().unwrap();
+                let mut active_lock = active_hotkeys.write().unwrap();
+
                 for def in hotkeys_lock.iter() {
-                    if def.keys.is_subset(&pressed_lock) {
+                    // Check if all keys for the hotkey are pressed and it's not already active.
+                    if def.keys.is_subset(&pressed_lock) && !active_lock.contains(&def.id) {
                         eprintln!("[system-agent] Hotkey match found: {:?}", def);
                         send_event(&OutputEvent { event: "hotkey_pressed", id: &def.id });
+                        // Mark the hotkey as active to prevent re-firing.
+                        active_lock.insert(def.id.clone());
                     }
                 }
                 send_raw_event("KeyPress", key);
             }
             EventType::KeyRelease(key) => {
                 pressed_lock.remove(&key);
+                let hotkeys_lock = hotkeys.read().unwrap();
+                let mut active_lock = active_hotkeys.write().unwrap();
+
+                // Check if the released key was part of any registered hotkey.
+                // If so, deactivate that hotkey so it can be fired again.
+                for def in hotkeys_lock.iter() {
+                    if def.keys.contains(&key) && active_lock.contains(&def.id) {
+                        active_lock.remove(&def.id);
+                    }
+                }
+
                 send_raw_event("KeyRelease", key);
             }
             _ => (),

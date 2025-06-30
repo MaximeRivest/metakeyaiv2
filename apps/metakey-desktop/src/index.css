@@ -60,13 +60,32 @@ body {
 
 /* --- WIDGET SIZES --- */
 
+.widget[data-size="orb"] {
+  width: var(--mx-widget-orb-diameter, 72px);
+  height: var(--mx-widget-orb-diameter, 72px);
+  border-radius: 50%;
+}
+
+.widget[data-size="mini"] {
+  width: var(--mx-widget-mini-diameter, 96px);
+  height: var(--mx-widget-mini-diameter, 96px);
+}
+
 .widget[data-size="small"] {
   width: var(--mx-widget-small-w, 280px);
   height: var(--mx-widget-small-h, 180px);
 }
+
 .widget[data-size="medium"] {
   width: var(--mx-widget-medium-w, 400px);
   height: var(--mx-widget-medium-h, 220px);
+}
+
+.widget[data-size="full"] {
+  width: var(--mx-widget-full-w, 100vw);
+  height: var(--mx-widget-full-h, 100vh);
+  max-width: 100vw;
+  max-height: 100vh;
 }
 
 
@@ -83,6 +102,79 @@ body {
   right: var(--mx-event-log-position-right, 10px);
   left: var(--mx-event-log-position-left, auto);
   top: var(--mx-event-log-position-top, auto);
+}
+
+.widget[data-widget-id="spell-book"] {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--mx-spellbook-width, 500px);
+  height: var(--mx-spellbook-height, 300px);
+  max-height: var(--mx-spellbook-max-height, 80vh);
+  background-color: var(--mx-spellbook-bg);
+}
+
+.spellbook-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.spellbook-menu {
+  width: 180px;
+  background-color: var(--mx-spellbook-menu-bg);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spellbook-menu-item {
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.spellbook-menu-item.selected {
+  background-color: var(--mx-spellbook-menu-item-selected-bg);
+}
+
+.spell-grid {
+  flex-grow: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--mx-spellbook-grid-columns, 4), 1fr);
+  gap: 8px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.spell-grid-item {
+  background-color: var(--mx-widget-bg); /* Use widget bg for contrast */
+  border: 1px solid var(--mx-widget-border-color);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  transition: all 0.15s ease-in-out;
+}
+
+.spell-grid-item.selected {
+  transform: scale(1.05);
+  border-color: var(--mx-accent, #00ffd0);
+  box-shadow: 0 0 10px -2px var(--mx-accent, #00ffd0);
+}
+
+.spell-grid-item .shortcut {
+  font-family: monospace;
+  background-color: rgba(0,0,0,0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  opacity: 0.7;
 }
 
 
@@ -162,4 +254,191 @@ body {
 @keyframes slide-up {
   from { transform: translateY(0); }
   to { transform: translateY(-80px); }
+}
+
+
+/* --- NOTIFICATIONS WIDGET --- */
+
+.widget[data-widget-id="notifications"] {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.notifications-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--mx-notification-bg);
+  border: var(--mx-notification-border);
+  border-radius: 12px;
+  box-shadow: var(--mx-notification-shadow);
+  min-width: 280px;
+  transform-origin: right center;
+  will-change: transform, opacity;
+}
+
+.notification-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notification-title {
+  font-size: var(--mx-font-size-m);
+  font-weight: 600;
+}
+
+.notification-shortcut {
+  font-size: var(--mx-font-size-s);
+  opacity: 0.7;
+  font-family: monospace;
+}
+
+/* Notification animations */
+.notification-slide {
+  transform: translateX(400px);
+  opacity: 0;
+}
+
+.notification-slide.notification-enter {
+  animation: slide-in-right 0.4s ease-out forwards;
+}
+
+.notification-slide.notification-exit {
+  animation: slide-out-right 0.4s ease-in forwards;
+}
+
+.notification-fade {
+  opacity: 0;
+}
+
+.notification-fade.notification-enter {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.notification-fade.notification-exit {
+  animation: fade-out 0.3s ease-in forwards;
+}
+
+.notification-pop {
+  transform: scale(0) translateY(-20px);
+  opacity: 0;
+}
+
+.notification-pop.notification-enter {
+  animation: pop-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.notification-pop.notification-exit {
+  animation: pop-out 0.3s ease-in forwards;
+}
+
+@keyframes slide-in-right {
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slide-out-right {
+  to { transform: translateX(400px); opacity: 0; }
+}
+
+@keyframes fade-in {
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes pop-in {
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes pop-out {
+  to { transform: scale(0.8) translateY(-10px); opacity: 0; }
+}
+
+
+/* --- STATS WIDGET --- */
+
+.widget[data-widget-id="stats"] {
+  bottom: 20px;
+  right: 20px;
+  background: var(--mx-stats-bg, var(--mx-widget-bg));
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--mx-stats-grid-gap, 12px);
+  width: 100%;
+}
+
+.widget[data-size="mini"] .stats-grid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: var(--mx-font-size-s);
+  color: var(--mx-stats-label-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: var(--mx-font-size-m);
+  color: var(--mx-stats-value-color);
+  font-weight: 600;
+  font-family: monospace;
+}
+
+
+/* --- MAGICAL THEME ENHANCEMENTS --- */
+
+.widget[data-size="orb"] .widget-content {
+  position: relative;
+  overflow: visible;
+}
+
+/* Pulse animation for orb widgets in magical theme */
+@keyframes magical-pulse {
+  0%, 100% { 
+    box-shadow: var(--mx-widget-shadow),
+                0 0 20px var(--mx-glow-primary),
+                0 0 40px var(--mx-glow-secondary);
+  }
+  50% { 
+    box-shadow: var(--mx-widget-shadow),
+                0 0 30px var(--mx-glow-primary),
+                0 0 60px var(--mx-glow-secondary);
+  }
+}
+
+/* Apply pulse to orb widgets when theme has glow variables */
+.widget[data-size="orb"][style*="--mx-glow"] {
+  animation: magical-pulse var(--mx-pulse-duration, 3s) ease-in-out infinite;
 }

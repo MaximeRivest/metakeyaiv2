@@ -1,16 +1,20 @@
 import type { Configuration } from 'webpack';
 
-import { rules } from './webpack.rules';
+import { rules as baseRules } from './webpack.rules';
 import { plugins } from './webpack.plugins';
 
-rules.push({
-  test: /\.css$/,
-  use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
-});
+// Create a new array for renderer-specific rules to avoid mutating the shared baseRules
+const rendererRules = [
+  ...baseRules, // Copy the base rules
+  {
+    test: /\.css$/,
+    use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
+  },
+];
 
 export const rendererConfig: Configuration = {
   module: {
-    rules,
+    rules: rendererRules, // Use the new, separate array
   },
   plugins,
   resolve: {

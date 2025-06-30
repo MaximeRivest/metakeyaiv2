@@ -2,20 +2,89 @@
   "id": "default",
   "name": "MetaKey Default",
   "tokens": "tokens.css",
-  "layout": {
-    "primary": [
-      {
-        "widgetId": "main-hud",
-        "component": "MainHUD",
-        "size": "medium"
-      }
-    ],
-    "secondary": [
-      {
-        "widgetId": "debug-log",
-        "component": "DebugLog",
-        "size": "small"
-      }
-    ]
+  "layouts": {
+    "1": {
+      "primary": [
+        {
+          "widgetId": "main-hud",
+          "component": "MainHUD",
+          "size": "medium"
+        },
+        {
+          "widgetId": "notifications",
+          "component": "Notifications",
+          "size": "medium"
+        },
+        {
+          "widgetId": "stats",
+          "component": "Stats",
+          "size": "small"
+        },
+        {
+          "widgetId": "spell-book",
+          "component": "SpellBook",
+          "role": "spellbook"
+        }
+      ]
+    },
+    "3": {
+      "primary": [
+        {
+          "widgetId": "main-hud",
+          "component": "MainHUD",
+          "size": "medium",
+          "x": 10,
+          "y": 10
+        },
+        {
+          "widgetId": "spell-book",
+          "component": "SpellBook",
+          "role": "spellbook"
+        }
+      ],
+      "secondary": [
+        [],
+        [
+          {
+            "widgetId": "stats",
+            "component": "Stats",
+            "size": "small"
+          },
+          {
+            "widgetId": "notifications",
+            "component": "Notifications",
+            "size": "medium"
+          }
+        ]
+      ]
+    },
+    "default": {
+      "primary": [
+        {
+          "widgetId": "main-hud",
+          "component": "MainHUD",
+          "size": "medium"
+        },
+        {
+          "widgetId": "spell-book",
+          "component": "SpellBook",
+          "role": "spellbook"
+        }
+      ],
+      "secondary": [
+        [
+          {
+            "widgetId": "stats",
+            "component": "Stats",
+            "size": "small"
+          },
+          {
+            "widgetId": "notifications",
+            "component": "Notifications",
+            "size": "medium"
+          }
+        ]
+      ]
+    }
   }
-} 
+}

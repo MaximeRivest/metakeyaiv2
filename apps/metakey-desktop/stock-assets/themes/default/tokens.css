@@ -44,4 +44,29 @@
   /* Animations */
   --mx-hotkey-trigger-duration: 3000ms;
   --mx-hotkey-trigger-animation-speed: 500ms;
+
+  /* Notifications */
+  --mx-notification-duration: 3000ms;
+  --mx-notification-animation-style: slide; /* slide, fade, pop */
+  --mx-notification-bg: rgba(40, 40, 60, 0.95);
+  --mx-notification-border: 1px solid rgba(100, 100, 150, 0.3);
+  --mx-notification-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  
+  /* Stats Widget */
+  --mx-stats-bg: rgba(20, 20, 30, 0.9);
+  --mx-stats-label-color: rgba(255, 255, 255, 0.6);
+  --mx-stats-value-color: #fff;
+  --mx-stats-grid-gap: 12px;
+
+  /* Spellbook Widget */
+  --mx-spellbook-width: 500px;
+  --mx-spellbook-height: 300px;
+  --mx-spellbook-max-height: 80vh;
+  --mx-spellbook-bg: var(--mx-widget-bg);
+  --mx-spell-item-selected-bg: rgba(255, 255, 255, 0.1);
+  --mx-spell-item-shortcut-bg: rgba(0,0,0,0.3);
+  
+  --mx-spellbook-menu-bg: rgba(0,0,0,0.2);
+  --mx-spellbook-menu-item-selected-bg: rgba(255, 255, 255, 0.37);
+  --mx-spellbook-grid-columns: 4;
 }

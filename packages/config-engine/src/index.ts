@@ -1,6 +1,7 @@
 import { app } from 'electron';
 import path from 'path';
 import fse from 'fs-extra';
+import { Theme, WidgetConfig, DisplayLayout, ThemeLayouts } from 'shared-types';
 
 export interface HotkeyBinding {
   shortcut: string;
@@ -16,8 +17,7 @@ export interface PathService {
   getThemesDirectory(): string;
   getHotkeysDirectory(): string;
   getHotkeyBindings(setNames: string[]): Promise<HotkeyBinding[]>;
-  getWidgetPositions(): Promise<WidgetPositionConfig>;
-  setWidgetPosition(widgetId: string, x: number, y: number): Promise<void>;
+  updateWidgetPositionInTheme(themeId: string, displayCount: number, widgetId: string, x: number, y: number): Promise<void>;
 }
 
 export class ConfigService implements PathService {
@@ -25,66 +25,30 @@ export class ConfigService implements PathService {
   private readonly spellsDirectory: string;
   private readonly themesDirectory: string;
   private readonly hotkeysDirectory: string;
-  private readonly widgetPositionsPath: string;
-  private widgetPositions: WidgetPositionConfig = {};
 
   constructor() {
     this.userDataPath = app.getPath('userData');
     this.spellsDirectory = path.join(this.userDataPath, 'spells');
     this.themesDirectory = path.join(this.userDataPath, 'themes');
     this.hotkeysDirectory = path.join(this.userDataPath, 'hotkeys');
-    this.widgetPositionsPath = path.join(this.userDataPath, 'overlay-positions.json');
   }
 
   /**
-   * Ensures that all necessary directories exist on startup.
+   * Ensures the necessary user data directories exist.
    * If user directories are empty, it copies the stock assets into them.
    */
   public async initialize(stockAssetDirectories: {
-    spells: string;
-    themes: string;
-    hotkeys: string;
+    spells: string,
+    themes: string,
+    hotkeys: string,
   }): Promise<void> {
     await fse.ensureDir(this.spellsDirectory);
     await fse.ensureDir(this.themesDirectory);
     await fse.ensureDir(this.hotkeysDirectory);
 
-    // Sync stock assets by copying them if they don't exist in the user's dir.
     await this.syncStockAssets(stockAssetDirectories.spells, this.spellsDirectory, 'spells');
     await this.syncStockAssets(stockAssetDirectories.themes, this.themesDirectory, 'themes');
     await this.syncStockAssets(stockAssetDirectories.hotkeys, this.hotkeysDirectory, 'hotkeys');
-    await this.loadWidgetPositions();
-  }
-
-  /**
-   * Ensures that stock assets are present in the user's data directory.
-   * It copies any missing files or directories from the stock assets source.
-   * @param sourceDir The directory of the stock assets.
-   * @param targetDir The user's data directory.
-   * @param assetType A name for the asset type for logging purposes.
-   */
-  private async syncStockAssets(sourceDir: string, targetDir: string, assetType: string): Promise<void> {
-    try {
-      const stockAssets = await fse.readdir(sourceDir);
-      for (const asset of stockAssets) {
-        const sourcePath = path.join(sourceDir, asset);
-        const targetPath = path.join(targetDir, asset);
-        try {
-          await fse.access(targetPath);
-          // If access doesn't throw, the file/dir exists. Do nothing.
-        } catch (error) {
-          // If it throws, the file/dir does not exist, so we copy it.
-          console.log(`Syncing missing ${assetType} asset: ${asset}`);
-          await fse.copy(sourcePath, targetPath, { overwrite: false });
-        }
-      }
-    } catch (error) {
-      console.error(`Could not read stock ${assetType} directory at ${sourceDir}`, error);
-    }
-  }
-
-  public getUserDataPath(): string {
-    return this.userDataPath;
   }
 
   public getSpellsDirectory(): string {
@@ -95,27 +59,43 @@ export class ConfigService implements PathService {
     return this.themesDirectory;
   }
 
+  public getUserDataPath(): string {
+    return this.userDataPath;
+  }
+
   public getHotkeysDirectory(): string {
     return this.hotkeysDirectory;
+  }
+
+  private async syncStockAssets(from: string, to: string, type: string): Promise<void> {
+    const userFiles = await fse.readdir(to);
+    if (userFiles.length === 0) {
+      console.log(`No user ${type} found. Copying stock assets...`);
+      await fse.copy(from, to, {
+        overwrite: false,
+        errorOnExist: false,
+      });
+    }
   }
 
   public async getHotkeyBindings(setNames: string[]): Promise<HotkeyBinding[]> {
     const finalBindings = new Map<string, HotkeyBinding>();
 
     for (const setName of setNames) {
-      const hotkeysPath = path.join(this.hotkeysDirectory, `${setName}.json`);
+      const filePath = path.join(this.hotkeysDirectory, `${setName}.json`);
       try {
-        const data = await fse.readFile(hotkeysPath, 'utf-8');
-        const bindings: HotkeyBinding[] = JSON.parse(data);
+        const fileContent = await fse.readFile(filePath, 'utf-8');
+        const bindings = JSON.parse(fileContent) as HotkeyBinding[];
         for (const binding of bindings) {
+          // The shortcut itself is the unique identifier to prevent duplicates.
           finalBindings.set(binding.shortcut, binding);
         }
-      } catch (error) {
-        if (error.code === 'ENOENT') {
-          console.warn(`Hotkey set "${setName}" not found at ${hotkeysPath}. Skipping.`);
+      } catch (e) {
+        if (e.code === 'ENOENT') {
+          // This is not a critical error; the hotkey set might just not exist.
+          console.warn(`[ConfigService] Hotkey set "${setName}" not found at ${filePath}`);
         } else {
-          // For other errors, re-throw
-          throw error;
+          console.error(`[ConfigService] Error loading hotkey set "${setName}":`, e);
         }
       }
     }
@@ -129,28 +109,64 @@ export class ConfigService implements PathService {
     return Array.from(finalBindings.values());
   }
 
-  private async loadWidgetPositions(): Promise<void> {
+  public async updateWidgetPositionInTheme(themeId: string, displayCount: number, widgetId: string, x: number, y: number): Promise<void> {
+    const themeManifestPath = path.join(this.themesDirectory, themeId, 'theme.json');
     try {
-      this.widgetPositions = await fse.readJson(this.widgetPositionsPath);
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        this.widgetPositions = {};
-      } else {
-        console.error('Error loading widget positions:', error);
+      const theme: Theme = await fse.readJson(themeManifestPath);
+
+      if (!theme.layouts) {
+        console.warn(`[ConfigService] Theme "${themeId}" has no layouts property. Cannot save widget position.`);
+        return;
       }
+      
+      const layoutKey = this.findLayoutKeyForDisplayCount(theme.layouts, displayCount);
+      const layoutToUpdate = theme.layouts[layoutKey];
+
+      if (!layoutToUpdate) {
+        console.warn(`[ConfigService] No suitable layout found for display count ${displayCount} in theme "${themeId}".`);
+        return;
+      }
+      
+      let widgetUpdated = false;
+
+      const updateWidget = (widget: WidgetConfig) => {
+        if (widget.widgetId === widgetId) {
+          widget.x = Math.round(x);
+          widget.y = Math.round(y);
+          widgetUpdated = true;
+        }
+        return widget;
+      };
+
+      if (layoutToUpdate.primary) {
+        layoutToUpdate.primary = layoutToUpdate.primary.map(updateWidget);
+      }
+      if (layoutToUpdate.secondary) {
+        layoutToUpdate.secondary = layoutToUpdate.secondary.map(
+          (displayLayout: WidgetConfig[]) => displayLayout.map(updateWidget)
+        );
+      }
+
+      if (widgetUpdated) {
+        await fse.writeJson(themeManifestPath, theme, { spaces: 2 });
+      } else {
+        console.warn(`[ConfigService] Widget "${widgetId}" not found in the active layout for theme "${themeId}". Position not saved.`);
+      }
+
+    } catch (error) {
+        console.error(`Error updating theme file for ${themeId}:`, error);
     }
-  }
-  
-  public async getWidgetPositions(): Promise<WidgetPositionConfig> {
-    return this.widgetPositions;
   }
 
-  public async setWidgetPosition(widgetId: string, x: number, y: number): Promise<void> {
-    this.widgetPositions[widgetId] = { x, y };
-    try {
-      await fse.writeJson(this.widgetPositionsPath, this.widgetPositions, { spaces: 2 });
-    } catch (error) {
-      console.error('Error saving widget position:', error);
+  private findLayoutKeyForDisplayCount(layouts: ThemeLayouts, displayCount: number): string {
+    let count = displayCount;
+    while (count > 0) {
+      if (layouts[count.toString()]) {
+        return count.toString();
+      }
+      count--;
     }
+    // As a final fallback, check for a "default" key.
+    return layouts['default'] ? 'default' : null;
   }
 } 
