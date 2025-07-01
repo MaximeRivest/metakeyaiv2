@@ -201,11 +201,37 @@ class Renderer {
 
   private registerIpcListeners() {
     window.ipc.on(IpcChannel.SET_THEME, ({ theme, layout }: ThemeAndLayout) => {
-    const root = document.documentElement;
-    for (const [key, value] of Object.entries(theme.tokens)) {
-      root.style.setProperty(key, value as string);
-    }
-      this.renderLayout(layout);
+      // Load the theme CSS file
+      const existingThemeLink = document.head.querySelector('link[data-theme-tokens]');
+      if (existingThemeLink) {
+        existingThemeLink.remove();
+      }
+      
+      const themeLink = document.createElement('link');
+      themeLink.rel = 'stylesheet';
+      themeLink.href = theme.tokens; // This should be the path to the CSS file
+      themeLink.setAttribute('data-theme-tokens', '');
+      document.head.appendChild(themeLink);
+      
+      // Wait for CSS to load before rendering layout
+      themeLink.onload = () => {
+        this.renderLayout(layout);
+        // Force spellbook to refresh if it's currently open
+        if (this.spellbookView && this.spellbookView.exists()) {
+          setTimeout(() => {
+            const spellbookWidget = document.querySelector('[data-widget-id="spell-book"]') as HTMLElement;
+            if (spellbookWidget && spellbookWidget.style.display !== 'none') {
+              // Trigger a style recalculation
+              spellbookWidget.offsetHeight;
+            }
+          }, 50);
+        }
+      };
+      
+      // Fallback in case onload doesn't fire
+      setTimeout(() => {
+        this.renderLayout(layout);
+      }, 100);
     });
 
     window.ipc.on(IpcChannel.SPELLBOOK_UPDATE, (payload) => {

@@ -18,6 +18,21 @@ export class SpellbookView extends BaseWidget {
         // Set up navigation listener via IPC
         this.navigationCleanup = window.ipc.on(IpcChannel.SPELLBOOK_NAVIGATE, this.handleNavigation);
         this.setupResizeObserver();
+        
+        // Listen for theme changes to refresh styling
+        window.ipc.on(IpcChannel.SET_THEME, () => {
+            // Force a repaint when theme changes
+            if (this.widget) {
+                this.widget.style.display = 'none';
+                requestAnimationFrame(() => {
+                    if (this.widget) {
+                        this.widget.style.display = 'block';
+                        // Refresh content to apply new theme
+                        this.populateContent();
+                    }
+                });
+            }
+        });
     }
 
     private setupResizeObserver(): void {
@@ -58,8 +73,18 @@ export class SpellbookView extends BaseWidget {
 
         this.spells = payload.spells;
         this.menu = payload.menu;
+        
+        // Ensure we populate immediately and then show
         this.populate();
-        this.show();
+        
+        // Force a layout recalculation to ensure CSS variables are applied
+        requestAnimationFrame(() => {
+            if (this.widget) {
+                // Force style recalculation
+                this.widget.offsetHeight; // This triggers a layout
+                this.show();
+            }
+        });
     }
 
     private populate() {
@@ -206,6 +231,20 @@ export class SpellbookView extends BaseWidget {
         }
     }
 
+    public show(): void {
+        if (this.widget) {
+            this.widget.style.display = 'block';
+            // Force immediate layout and visibility
+            this.widget.offsetHeight; // Trigger layout
+            
+            // Ensure content is populated if we have data
+            if (this.menu.length > 0) {
+                this.populateContent();
+                this.updateSelection();
+            }
+        }
+    }
+
     private handleNavigation = ({ key }: { key: string }) => {
         if (!this.widget) return;
 
@@ -254,19 +293,15 @@ export class SpellbookView extends BaseWidget {
         const navItems = this.queryAll('.nav-item');
         if (navItems.length === 0) return;
 
+        // For top navigation, use Left/Right to navigate menu
         switch (key) {
-            case 'ArrowUp':
+            case 'ArrowLeft':
                 this.menuIndex = (this.menuIndex - 1 + navItems.length) % navItems.length;
                 break;
-            case 'ArrowDown':
+            case 'ArrowRight':
                 this.menuIndex = (this.menuIndex + 1) % navItems.length;
                 break;
-            case 'ArrowRight':
-                if (this.activeMenuId === 'spells' && this.spells.length > 0) {
-                    this.navMode = 'grid';
-                    this.gridIndex = 0;
-                }
-                break;
+            case 'ArrowDown':
             case 'Enter':
                 this.activeMenuId = this.menu[this.menuIndex]?.id || 'spells';
                 this.populateContent();
@@ -303,11 +338,7 @@ export class SpellbookView extends BaseWidget {
                 }
                 break;
             case 'ArrowLeft':
-                if (this.gridIndex === 0) {
-                    this.navMode = 'menu';
-                } else {
-                    this.gridIndex = (this.gridIndex - 1 + contentItems.length) % contentItems.length;
-                }
+                this.gridIndex = (this.gridIndex - 1 + contentItems.length) % contentItems.length;
                 break;
             case 'ArrowRight':
                 this.gridIndex = (this.gridIndex + 1) % contentItems.length;
@@ -331,4 +362,4 @@ export class SpellbookView extends BaseWidget {
         }
         this.updateSelection();
     }
-} 
+}

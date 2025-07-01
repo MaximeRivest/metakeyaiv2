@@ -111,106 +111,161 @@ body {
   transform: translate(-50%, -50%);
   width: var(--mx-spellbook-width, 520px);
   height: var(--mx-spellbook-height, 360px);
-  max-width: min(520px, 90vw);
-  max-height: min(360px, 85vh);
+  max-width: min(var(--mx-spellbook-width, 520px), 90vw);
+  max-height: min(var(--mx-spellbook-height, 360px), 85vh);
   background: var(--mx-spellbook-bg, linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98)));
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  border: 1px solid var(--mx-spellbook-border, rgba(226, 232, 240, 0.8));
-  box-shadow: 
+  backdrop-filter: var(--mx-spellbook-backdrop-filter, blur(10px));
+  border-radius: var(--mx-spellbook-radius, 16px);
+  border: var(--mx-spellbook-border-width, 1px) solid var(--mx-spellbook-border, rgba(226, 232, 240, 0.8));
+  box-shadow: var(--mx-spellbook-shadow, 
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(255, 255, 255, 0.05));
   overflow: hidden;
+  position: relative;
+  /* Force immediate style application */
+  will-change: transform;
 }
 
-.spellbook-container {
+/* Force immediate visibility on show */
+.widget[data-widget-id="spell-book"]:not([style*="display: none"]) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Support both top and left navigation orientations */
+.widget[data-widget-id="spell-book"][data-nav="top"] .spellbook-container {
   display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
-  position: relative;
 }
 
-/* Navigation Sidebar */
-.spellbook-nav {
+.widget[data-widget-id="spell-book"][data-nav="left"] .spellbook-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+}
+
+/* Top Navigation Bar */
+.widget[data-widget-id="spell-book"][data-nav="top"] .spellbook-nav {
   flex-shrink: 0;
-  width: 72px;
+  height: var(--mx-spellbook-nav-height, 72px);
+  width: 100%;
+  background: var(--mx-spellbook-nav-bg, linear-gradient(90deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.9)));
+  border-bottom: var(--mx-spellbook-nav-border-width, 1px) solid var(--mx-spellbook-nav-border, rgba(226, 232, 240, 0.6));
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  gap: var(--mx-spellbook-nav-gap, 12px);
+}
+
+/* Left Navigation Sidebar (alternative) */
+.widget[data-widget-id="spell-book"][data-nav="left"] .spellbook-nav {
+  flex-shrink: 0;
+  width: var(--mx-spellbook-nav-width, 72px);
+  height: 100%;
   background: var(--mx-spellbook-nav-bg, linear-gradient(180deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.9)));
-  border-right: 1px solid var(--mx-spellbook-nav-border, rgba(226, 232, 240, 0.6));
+  border-right: var(--mx-spellbook-nav-border-width, 1px) solid var(--mx-spellbook-nav-border, rgba(226, 232, 240, 0.6));
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   padding: 16px 0;
-  gap: 8px;
+  gap: var(--mx-spellbook-nav-gap, 8px);
 }
 
-/* Navigation Items */
+/* Navigation Items - Universal Styles */
 .nav-item {
   position: relative;
-  width: 48px;
-  height: 48px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
+  width: var(--mx-spellbook-nav-item-size, 56px);
+  height: var(--mx-spellbook-nav-item-size, 56px);
+  border: var(--mx-spellbook-nav-item-border-width, 0) solid var(--mx-spellbook-nav-item-border, transparent);
+  border-radius: var(--mx-spellbook-nav-item-radius, 12px);
+  background: var(--mx-spellbook-nav-item-bg, transparent);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--mx-spellbook-nav-item-transition, all 0.2s cubic-bezier(0.4, 0, 0.2, 1));
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--mx-spellbook-nav-item-gap, 2px);
   color: var(--mx-spellbook-nav-item-color, rgba(71, 85, 105, 0.8));
+  box-shadow: var(--mx-spellbook-nav-item-shadow, none);
 }
 
 .nav-item:hover {
   background: var(--mx-spellbook-nav-item-hover-bg, rgba(241, 245, 249, 0.8));
   color: var(--mx-spellbook-nav-item-hover-color, rgb(71, 85, 105));
-  transform: translateY(-1px);
+  transform: var(--mx-spellbook-nav-item-hover-transform, translateY(-1px));
+  box-shadow: var(--mx-spellbook-nav-item-hover-shadow, none);
+  border-color: var(--mx-spellbook-nav-item-hover-border, transparent);
 }
 
 .nav-item.active {
   background: var(--mx-spellbook-nav-item-active-bg, linear-gradient(135deg, #3b82f6, #1d4ed8));
-  color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  color: var(--mx-spellbook-nav-item-active-color, white);
+  box-shadow: var(--mx-spellbook-nav-item-active-shadow, 0 4px 12px rgba(59, 130, 246, 0.4));
+  border-color: var(--mx-spellbook-nav-item-active-border, transparent);
+  transform: var(--mx-spellbook-nav-item-active-transform, none);
 }
 
-.nav-item.active::before {
+/* Top Navigation Active Indicator */
+.widget[data-widget-id="spell-book"][data-nav="top"] .nav-item.active::before {
   content: '';
   position: absolute;
-  left: -16px;
+  bottom: var(--mx-spellbook-active-indicator-offset, -12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--mx-spellbook-active-indicator-width, 24px);
+  height: var(--mx-spellbook-active-indicator-height, 4px);
+  background: var(--mx-spellbook-active-indicator-color, var(--mx-accent, #3b82f6));
+  border-radius: var(--mx-spellbook-active-indicator-radius, 2px 2px 0 0);
+}
+
+/* Left Navigation Active Indicator */
+.widget[data-widget-id="spell-book"][data-nav="left"] .nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: var(--mx-spellbook-active-indicator-offset, -16px);
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
-  height: 24px;
-  background: var(--mx-accent, #3b82f6);
-  border-radius: 0 2px 2px 0;
+  width: var(--mx-spellbook-active-indicator-height, 4px);
+  height: var(--mx-spellbook-active-indicator-width, 24px);
+  background: var(--mx-spellbook-active-indicator-color, var(--mx-accent, #3b82f6));
+  border-radius: var(--mx-spellbook-active-indicator-radius, 0 2px 2px 0);
 }
 
 /* Navigation Icons */
 .nav-icon {
-  width: 20px;
-  height: 20px;
+  width: var(--mx-spellbook-nav-icon-size, 22px);
+  height: var(--mx-spellbook-nav-icon-size, 22px);
   display: flex;
   align-items: center;
   justify-content: center;
+  filter: var(--mx-spellbook-nav-icon-filter, none);
 }
 
 .nav-icon svg {
   width: 100%;
   height: 100%;
-  stroke-width: 2;
+  stroke-width: var(--mx-spellbook-nav-icon-stroke, 2);
 }
 
 /* Navigation Hotkey Indicators */
 .nav-hotkey {
-  font-size: 9px;
-  font-weight: 600;
-  opacity: 0.7;
+  font-size: var(--mx-spellbook-nav-hotkey-size, 9px);
+  font-weight: var(--mx-spellbook-nav-hotkey-weight, 600);
+  opacity: var(--mx-spellbook-nav-hotkey-opacity, 0.7);
   line-height: 1;
+  color: var(--mx-spellbook-nav-hotkey-color, currentColor);
 }
 
 .nav-item.active .nav-hotkey {
-  opacity: 0.9;
+  opacity: var(--mx-spellbook-nav-hotkey-active-opacity, 0.9);
 }
 
 /* Main Content Area */
@@ -220,6 +275,7 @@ body {
   flex-direction: column;
   background: var(--mx-spellbook-content-bg, rgba(255, 255, 255, 0.4));
   overflow: hidden;
+  position: relative;
 }
 
 /* Spell Grid Layout */
@@ -227,8 +283,8 @@ body {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(var(--mx-spellbook-grid-columns, 3), 1fr);
-  gap: 12px;
-  padding: 20px;
+  gap: var(--mx-spellbook-grid-gap, 12px);
+  padding: var(--mx-spellbook-grid-padding, 20px);
   overflow-y: auto;
   align-content: start;
 }
@@ -236,32 +292,34 @@ body {
 /* Spell Items */
 .spell-item {
   background: var(--mx-spell-item-bg, rgba(255, 255, 255, 0.7));
-  border: 1px solid var(--mx-spell-item-border, rgba(226, 232, 240, 0.6));
-  border-radius: 12px;
-  padding: 16px;
+  border: var(--mx-spell-item-border-width, 1px) solid var(--mx-spell-item-border, rgba(226, 232, 240, 0.6));
+  border-radius: var(--mx-spell-item-radius, 12px);
+  padding: var(--mx-spell-item-padding, 16px);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--mx-spell-item-transition, all 0.2s cubic-bezier(0.4, 0, 0.2, 1));
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 80px;
+  gap: var(--mx-spell-item-gap, 8px);
+  min-height: var(--mx-spell-item-min-height, 80px);
   position: relative;
   overflow: hidden;
+  box-shadow: var(--mx-spell-item-shadow, none);
 }
 
 .spell-item:hover {
   background: var(--mx-spell-item-hover-bg, rgba(255, 255, 255, 0.9));
   border-color: var(--mx-spell-item-hover-border, rgba(59, 130, 246, 0.3));
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transform: var(--mx-spell-item-hover-transform, translateY(-2px));
+  box-shadow: var(--mx-spell-item-hover-shadow, 0 8px 25px rgba(0, 0, 0, 0.1));
 }
 
 .spell-item.active {
   background: var(--mx-spell-item-active-bg, rgba(59, 130, 246, 0.1));
-  border-color: var(--mx-accent, #3b82f6);
-  box-shadow: 
+  border-color: var(--mx-spell-item-active-border, var(--mx-accent, #3b82f6));
+  box-shadow: var(--mx-spell-item-active-shadow, 
     0 0 0 2px var(--mx-accent, #3b82f6),
-    0 8px 25px rgba(59, 130, 246, 0.2);
+    0 8px 25px rgba(59, 130, 246, 0.2));
+  transform: var(--mx-spell-item-active-transform, none);
 }
 
 .spell-title {
