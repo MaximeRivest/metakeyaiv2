@@ -1,6 +1,6 @@
 {
-    "id": "standard-mmo",
-    "name": "Standard MMO",
+    "id": "matrix",
+    "name": "Matrix",
     "tokens": "tokens.css",
     "layouts": {
       "1": {

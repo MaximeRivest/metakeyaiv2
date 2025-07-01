@@ -60,7 +60,7 @@ class MainApplication {
   private currentTheme: Theme | null = null;
   private currentDisplayCount = 0;
   private isQuitting = false;
-  private availableThemes: string[] = ['standard-mmo', 'default', 'magical'];
+  private availableThemes: string[] = ['matrix', 'default', 'magical'];
   private currentThemeIndex = 0;
 
   constructor() {
@@ -292,7 +292,7 @@ class MainApplication {
       .filter(d => d.id !== primaryDisplay.id)
       .sort((a, b) => a.bounds.x - b.bounds.x);
 
-    const theme = await this.themeService.loadTheme('standard-mmo');
+    const theme = await this.themeService.loadTheme('matrix');
     this.currentTheme = theme;
 
     for (const display of displays) {
