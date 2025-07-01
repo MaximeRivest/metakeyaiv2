@@ -211,12 +211,8 @@ class MainApplication {
 
   private updateWindowInteractivity(state: AppState): void {
     const shouldBeInteractive = state.mode !== AppMode.IDLE;
-    const isEditMode = state.mode === AppMode.EDIT;
-    
-    console.log(`>>> WINDOW INTERACTIVITY: mode=${state.mode}, shouldBeInteractive=${shouldBeInteractive}, isEditMode=${isEditMode}, current this.isEditMode=${this.isEditMode} at ${new Date().toISOString()}`);
     
     if (shouldBeInteractive !== this.isEditMode) {
-      console.log(`>>> WINDOW INTERACTIVITY: calling setInteractive(${shouldBeInteractive}) at ${new Date().toISOString()}`);
       this.setInteractive(shouldBeInteractive);
     }
   }
@@ -450,12 +446,10 @@ class MainApplication {
     });
     
     this.hotkeyEngine.registerAction('overlay:toggle-edit-mode', (binding: HotkeyBinding) => {
-      console.log(`>>> HOTKEY ACTION TRIGGERED: overlay:toggle-edit-mode at ${new Date().toISOString()}`);
-      this.toggleEditMode.bind(this)();
+      this.toggleEditMode();
     });
     this.hotkeyEngine.registerAction('overlay:toggle-spellbook', (binding: HotkeyBinding) => {
-      console.log(`>>> HOTKEY ACTION TRIGGERED: overlay:toggle-spellbook at ${new Date().toISOString()}`);
-      this.toggleSpellbookMode.bind(this)();
+      this.toggleSpellbookMode();
     });
     this.hotkeyEngine.registerAction('theme:cycle', this.cycleTheme.bind(this));
     
@@ -463,6 +457,19 @@ class MainApplication {
     this.hotkeyEngine.registerAction('navigation:input', (binding: HotkeyBinding) => {
       const payload = binding.payload as NavigationInputPayload;
       if (!payload) return;
+      
+      // Also update the key stream stats for hotkey presses
+      const friendlyKey = this.getFriendlyKeyName(payload.key);
+      
+      // Temporarily show the key in the stream and stats
+      this.appStateManager.setKeyStream(friendlyKey);
+      this.appStateManager.updateStats({ pressedKeys: friendlyKey });
+      
+      // Clear it after a short delay to show the key was pressed
+      setTimeout(() => {
+        this.appStateManager.setKeyStream('');
+        this.appStateManager.updateStats({ pressedKeys: '' });
+      }, 500);
       
       this.handleNavigationInput(payload);
     });
@@ -597,23 +604,108 @@ class MainApplication {
   private handleKeyEvent(event: SystemAgentEvent, type: 'press' | 'release'): void {
       this.broadcast(IpcChannel.AGENT_KEY_EVENT, event);
       
+      const friendlyKey = this.getFriendlyKeyName(event.key);
+      
       if (type === 'press') {
-        this.pressedKeys.add(event.key);
+        this.pressedKeys.add(friendlyKey);
       } else {
-        this.pressedKeys.delete(event.key);
+        this.pressedKeys.delete(friendlyKey);
       }
 
       const keys = Array.from(this.pressedKeys).join(' + ');
       
-      // Update the centralized state
+      // Update the centralized state with key stream
       this.appStateManager.setKeyStream(keys);
+      
+      // Also update the stats with the pressed keys
+      this.appStateManager.updateStats({ pressedKeys: keys });
 
       // Set a timer to clear the key stream after a period of inactivity
       clearTimeout(this.keyStreamTimeout);
       this.keyStreamTimeout = setTimeout(() => {
         this.pressedKeys.clear();
         this.appStateManager.setKeyStream('');
+        this.appStateManager.updateStats({ pressedKeys: '' });
       }, 2000);
+  }
+
+  private getFriendlyKeyName(rawKey: string): string {
+    // Convert raw key names to user-friendly names
+    switch (rawKey) {
+      case 'ControlLeft':
+      case 'ControlRight':
+        return 'Ctrl';
+      case 'AltLeft':
+      case 'AltRight':
+      case 'AltGr':
+        return 'Alt';
+      case 'ShiftLeft':
+      case 'ShiftRight':
+        return 'Shift';
+      case 'MetaLeft':
+      case 'MetaRight':
+        return 'Meta';
+      case 'Return':
+      case 'Enter':
+        return 'Enter';
+      case 'Escape':
+      case 'Esc':
+        return 'Esc';
+      case 'Space':
+        return 'Space';
+      case 'Tab':
+        return 'Tab';
+      case 'Backspace':
+        return 'Backspace';
+      case 'Delete':
+        return 'Del';
+      case 'ArrowUp':
+      case 'Up':
+        return '↑';
+      case 'ArrowDown':
+      case 'Down':
+        return '↓';
+      case 'ArrowLeft':
+      case 'Left':
+        return '←';
+      case 'ArrowRight':
+      case 'Right':
+        return '→';
+      // Numpad keys
+      case 'Kp0': return 'Numpad 0';
+      case 'Kp1': return 'Numpad 1';
+      case 'Kp2': return 'Numpad 2';
+      case 'Kp3': return 'Numpad 3';
+      case 'Kp4': return 'Numpad 4';
+      case 'Kp5': return 'Numpad 5';
+      case 'Kp6': return 'Numpad 6';
+      case 'Kp7': return 'Numpad 7';
+      case 'Kp8': return 'Numpad 8';
+      case 'Kp9': return 'Numpad 9';
+      case 'KpDecimal': return 'Numpad .';
+      case 'KpAdd': return 'Numpad +';
+      case 'KpSubtract': return 'Numpad -';
+      case 'KpMultiply': return 'Numpad *';
+      case 'KpDivide': return 'Numpad /';
+      case 'KpEnter': return 'Numpad Enter';
+      // Function keys
+      case 'F1': case 'F2': case 'F3': case 'F4': case 'F5': case 'F6':
+      case 'F7': case 'F8': case 'F9': case 'F10': case 'F11': case 'F12':
+        return rawKey;
+      // Single letter keys for navigation
+      case 'W': case 'A': case 'S': case 'D': case 'E': case 'T':
+        return rawKey;
+      default:
+        // Remove "Key" prefix, e.g., "KeyA" -> "A"
+        if (rawKey.startsWith('Key')) {
+          return rawKey.substring(3);
+        }
+        // Remove "Digit" prefix, e.g., "Digit1" -> "1"
+        if (rawKey.startsWith('Digit')) {
+          return rawKey.substring(5);
+        }
+        return rawKey;
+    }
   }
 
   private registerIpcHandlers(): void {
@@ -639,13 +731,10 @@ class MainApplication {
   }
 
   private toggleEditMode(): void {
-    console.log(`>>> MODE CHANGE: toggleEditMode called, current isEditMode: ${this.isEditMode} at ${new Date().toISOString()}`);
-    
     // Use centralized state management instead of direct isEditMode manipulation
     const currentMode = this.appStateManager.getState().mode;
     const newMode = currentMode === AppMode.EDIT ? AppMode.IDLE : AppMode.EDIT;
     
-    console.log(`>>> MODE CHANGE: toggleEditMode changing from ${currentMode} to ${newMode} at ${new Date().toISOString()}`);
     this.appStateManager.setMode(newMode);
   }
 
@@ -746,7 +835,6 @@ class MainApplication {
     const currentMode = this.appStateManager.getState().mode;
     const newMode = currentMode === AppMode.SPELLBOOK ? AppMode.IDLE : AppMode.SPELLBOOK;
     
-    console.log(`>>> MODE CHANGE: toggleSpellbookMode called, changing from ${currentMode} to ${newMode} at ${new Date().toISOString()}`);
     this.appStateManager.setMode(newMode);
   }
 }

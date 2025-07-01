@@ -211,6 +211,7 @@ export interface AppState {
     totalTracks: number;
     currentTrackClipboard: number;
     totalClipboard: number;
+    pressedKeys?: string;
   };
 }
 

@@ -45,7 +45,8 @@ export class AppStateManager extends EventEmitter {
         backgroundTasks: 0,
         totalTracks: 1,
         currentTrackClipboard: 0,
-        totalClipboard: 0
+        totalClipboard: 0,
+        pressedKeys: ''
       }
     };
   }
@@ -62,7 +63,6 @@ export class AppStateManager extends EventEmitter {
    */
   public setMode(mode: AppMode): void {
     const previousMode = this.state.mode;
-    console.log(`>>> APP STATE MANAGER: setMode called, changing from ${previousMode} to ${mode} at ${new Date().toISOString()}`);
     
     this.state.mode = mode;
 
@@ -72,7 +72,6 @@ export class AppStateManager extends EventEmitter {
     this.state.settings.isVisible = mode === AppMode.SETTINGS;
     // Note: Edit mode doesn't show any special widgets, it just makes windows interactive
 
-    console.log(`>>> APP STATE MANAGER: emitting state-changed and mode-changed events at ${new Date().toISOString()}`);
     this.emit('state-changed', this.state);
     this.emit('mode-changed', { previous: previousMode, current: mode });
   }
