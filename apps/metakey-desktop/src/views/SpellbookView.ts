@@ -1,38 +1,31 @@
-import { IpcChannel, SpellbookEntry, SpellbookMenuItem, SpellbookMenuIcon } from "shared-types";
+import { IpcChannel, SpellbookEntry, SpellbookMenuItem, SpellbookMenuIcon, WidgetActionRequestPayload } from "shared-types";
 import { BaseWidget } from "./BaseWidget";
 
+interface SpellbookState {
+    isVisible: boolean;
+    entries: SpellbookEntry[];
+    menu: SpellbookMenuItem[];
+    selectedMenu: string;
+    selectedSpell: number;
+    navigationMode: 'menu' | 'grid';
+}
+
 export class SpellbookView extends BaseWidget {
-    private spells: SpellbookEntry[] = [];
-    private menu: SpellbookMenuItem[] = [];
-    private navMode: 'menu' | 'grid' = 'menu';
-    private menuIndex = 0;
-    private gridIndex = 0;
-    private navigationCleanup: (() => void) | null = null;
-    private activeMenuId: string = 'spells';
+    private state: SpellbookState = {
+        isVisible: false,
+        entries: [],
+        menu: [],
+        selectedMenu: 'spells',
+        selectedSpell: 0,
+        navigationMode: 'menu'
+    };
 
     constructor() {
         super('spell-book');
     }
 
     protected onMount(): void {
-        // Set up navigation listener via IPC
-        this.navigationCleanup = window.ipc.on(IpcChannel.SPELLBOOK_NAVIGATE, this.handleNavigation);
         this.setupResizeObserver();
-        
-        // Listen for theme changes to refresh styling
-        window.ipc.on(IpcChannel.SET_THEME, () => {
-            // Force a repaint when theme changes
-            if (this.widget) {
-                this.widget.style.display = 'none';
-                requestAnimationFrame(() => {
-                    if (this.widget) {
-                        this.widget.style.display = 'block';
-                        // Refresh content to apply new theme
-                        this.populateContent();
-                    }
-                });
-            }
-        });
     }
 
     private setupResizeObserver(): void {
@@ -68,23 +61,29 @@ export class SpellbookView extends BaseWidget {
         }
     }
 
-    public update(payload: { spells: SpellbookEntry[], menu: SpellbookMenuItem[] }): void {
+    public updateState(newState: SpellbookState): void {
         if (!this.widget) return;
 
-        this.spells = payload.spells;
-        this.menu = payload.menu;
+        const wasVisible = this.state.isVisible;
+        this.state = { ...newState };
         
-        // Ensure we populate immediately and then show
-        this.populate();
-        
-        // Force a layout recalculation to ensure CSS variables are applied
-        requestAnimationFrame(() => {
-            if (this.widget) {
-                // Force style recalculation
-                this.widget.offsetHeight; // This triggers a layout
-                this.show();
-            }
-        });
+        // If becoming visible or data changed, populate content
+        if (this.state.isVisible && (!wasVisible || this.hasDataChanged())) {
+            this.populate();
+            this.show();
+        } else if (!this.state.isVisible && wasVisible) {
+            this.hide();
+        }
+
+        // Update selection if state changed
+        if (this.state.isVisible) {
+            this.updateSelection();
+        }
+    }
+
+    private hasDataChanged(): boolean {
+        // Simple check if entries or menu have changed
+        return this.state.entries.length > 0 || this.state.menu.length > 0;
     }
 
     private populate() {
@@ -97,7 +96,7 @@ export class SpellbookView extends BaseWidget {
         contentEl.innerHTML = '';
 
         // Populate navigation with icons
-        this.menu.forEach((item, index) => {
+        this.state.menu.forEach((item, index) => {
             const button = document.createElement('button');
             button.className = 'nav-item';
             button.dataset.menuId = item.id;
@@ -118,22 +117,23 @@ export class SpellbookView extends BaseWidget {
             
             // Add click handler
             button.addEventListener('click', () => {
-                this.activeMenuId = item.id;
-                this.menuIndex = index;
-                this.updateSelection();
-                this.populateContent();
+                this.handleMenuClick(item.id, index);
             });
             
             navEl.appendChild(button);
         });
 
-        // Initialize selection
-        this.menuIndex = 0;
-        this.gridIndex = 0;
-        this.navMode = 'menu';
-        this.activeMenuId = this.menu[0]?.id || 'spells';
-        this.updateSelection();
+        // Populate content based on selected menu
         this.populateContent();
+    }
+
+    private handleMenuClick(menuId: string, index: number): void {
+        // Send action request to main process
+        window.ipc.invoke('widget:action-request', {
+            widgetId: this.widgetId,
+            action: 'menu-select',
+            payload: { menuId, index }
+        } as WidgetActionRequestPayload);
     }
 
     private createIcon(iconName: SpellbookMenuIcon): HTMLElement {
@@ -193,12 +193,12 @@ export class SpellbookView extends BaseWidget {
         
         contentEl.innerHTML = '';
         
-        if (this.activeMenuId === 'spells') {
+        if (this.state.selectedMenu === 'spells') {
             // Show spells grid
             const gridEl = document.createElement('div');
             gridEl.className = 'spell-grid';
             
-            this.spells.forEach((spell, index) => {
+            this.state.entries.forEach((spell, index) => {
                 const spellEl = document.createElement('button');
                 spellEl.className = 'spell-item';
                 spellEl.dataset.spellId = spell.spellId;
@@ -210,9 +210,7 @@ export class SpellbookView extends BaseWidget {
                 `;
                 
                 spellEl.addEventListener('click', () => {
-                    window.ipc.invoke(IpcChannel.SPELL_EXECUTE, { spellId: spell.spellId });
-                    this.hide();
-                    window.ipc.invoke(IpcChannel.SPELLBOOK_CLOSE_REQUEST);
+                    this.executeSpell(spell.spellId);
                 });
                 
                 gridEl.appendChild(spellEl);
@@ -223,12 +221,22 @@ export class SpellbookView extends BaseWidget {
             // Show placeholder content for other sections
             const placeholderEl = document.createElement('div');
             placeholderEl.className = 'content-placeholder';
+            const selectedMenuItem = this.state.menu.find(m => m.id === this.state.selectedMenu);
             placeholderEl.innerHTML = `
-                <div class="placeholder-icon">${this.createIcon(this.menu.find(m => m.id === this.activeMenuId)?.icon || SpellbookMenuIcon.SPELLS).innerHTML}</div>
-                <div class="placeholder-text">${this.menu.find(m => m.id === this.activeMenuId)?.label || 'Content'} coming soon...</div>
+                <div class="placeholder-icon">${this.createIcon(selectedMenuItem?.icon || SpellbookMenuIcon.SPELLS).innerHTML}</div>
+                <div class="placeholder-text">${selectedMenuItem?.label || 'Content'} coming soon...</div>
             `;
             contentEl.appendChild(placeholderEl);
         }
+    }
+
+    private executeSpell(spellId: string): void {
+        // Send spell execution request to main process
+        window.ipc.invoke('widget:action-request', {
+            widgetId: this.widgetId,
+            action: 'spell-execute',
+            payload: { spellId }
+        } as WidgetActionRequestPayload);
     }
 
     public show(): void {
@@ -238,28 +246,10 @@ export class SpellbookView extends BaseWidget {
             this.widget.offsetHeight; // Trigger layout
             
             // Ensure content is populated if we have data
-            if (this.menu.length > 0) {
+            if (this.state.menu.length > 0) {
                 this.populateContent();
                 this.updateSelection();
             }
-        }
-    }
-
-    private handleNavigation = ({ key }: { key: string }) => {
-        if (!this.widget) return;
-
-        if (this.navMode === 'menu') {
-            this.handleMenuNavigation(key);
-        } else {
-            this.handleGridNavigation(key);
-        }
-    }
-
-    protected onDestroy(): void {
-        // Clean up IPC listener
-        if (this.navigationCleanup) {
-            this.navigationCleanup();
-            this.navigationCleanup = null;
         }
     }
 
@@ -269,7 +259,8 @@ export class SpellbookView extends BaseWidget {
         // Update menu selection
         const navItems = this.queryAll('.nav-item');
         navItems.forEach((item, index) => {
-            if (this.navMode === 'menu' && index === this.menuIndex) {
+            const menuId = item.getAttribute('data-menu-id');
+            if (this.state.navigationMode === 'menu' && menuId === this.state.selectedMenu) {
                 item.classList.add('active');
                 item.scrollIntoView({ block: 'nearest' });
             } else {
@@ -280,7 +271,7 @@ export class SpellbookView extends BaseWidget {
         // Update content selection
         const contentItems = this.queryAll('.spell-item');
         contentItems.forEach((item, index) => {
-            if (this.navMode === 'grid' && index === this.gridIndex) {
+            if (this.state.navigationMode === 'grid' && index === this.state.selectedSpell) {
                 item.classList.add('active');
                 item.scrollIntoView({ block: 'nearest' });
             } else {
@@ -289,77 +280,7 @@ export class SpellbookView extends BaseWidget {
         });
     }
 
-    private handleMenuNavigation(key: string) {
-        const navItems = this.queryAll('.nav-item');
-        if (navItems.length === 0) return;
-
-        // For top navigation, use Left/Right to navigate menu
-        switch (key) {
-            case 'ArrowLeft':
-                this.menuIndex = (this.menuIndex - 1 + navItems.length) % navItems.length;
-                break;
-            case 'ArrowRight':
-                this.menuIndex = (this.menuIndex + 1) % navItems.length;
-                break;
-            case 'ArrowDown':
-            case 'Enter':
-                this.activeMenuId = this.menu[this.menuIndex]?.id || 'spells';
-                this.populateContent();
-                if (this.activeMenuId === 'spells' && this.spells.length > 0) {
-                    this.navMode = 'grid';
-                    this.gridIndex = 0;
-                }
-                break;
-            case 'Escape':
-                this.hide();
-                window.ipc.invoke(IpcChannel.SPELLBOOK_CLOSE_REQUEST);
-                break;
-        }
-        this.updateSelection();
-    }
-
-    private handleGridNavigation(key: string) {
-        const contentItems = this.queryAll('.spell-item');
-        if (contentItems.length === 0) return;
-
-        const gridEl = this.query('.spell-grid') as HTMLElement;
-        if (!gridEl) return;
-        
-        // Calculate grid columns dynamically
-        const gridComputedStyle = getComputedStyle(gridEl);
-        const columns = gridComputedStyle.gridTemplateColumns.split(' ').length;
-
-        switch (key) {
-            case 'ArrowUp':
-                if (this.gridIndex < columns) {
-                    this.navMode = 'menu';
-                } else {
-                    this.gridIndex = Math.max(0, this.gridIndex - columns);
-                }
-                break;
-            case 'ArrowLeft':
-                this.gridIndex = (this.gridIndex - 1 + contentItems.length) % contentItems.length;
-                break;
-            case 'ArrowRight':
-                this.gridIndex = (this.gridIndex + 1) % contentItems.length;
-                break;
-            case 'ArrowDown':
-                this.gridIndex = Math.min(contentItems.length - 1, this.gridIndex + columns);
-                break;
-            case 'Enter':
-                const selectedItem = contentItems[this.gridIndex] as HTMLElement;
-                const spellId = selectedItem.dataset.spellId;
-                if (spellId) {
-                    window.ipc.invoke(IpcChannel.SPELL_EXECUTE, { spellId });
-                }
-                this.hide();
-                window.ipc.invoke(IpcChannel.SPELLBOOK_CLOSE_REQUEST);
-                break;
-            case 'Escape':
-                this.hide();
-                window.ipc.invoke(IpcChannel.SPELLBOOK_CLOSE_REQUEST);
-                break;
-        }
-        this.updateSelection();
+    protected onDestroy(): void {
+        // Clean up any resources if needed
     }
 }

@@ -1,20 +1,21 @@
 :root {
-  /* Magical color palette */
-  --mx-bg: radial-gradient(circle at center, rgba(50, 20, 80, 0.9), rgba(20, 10, 40, 0.95));
-  --mx-text-color: #e8d4ff;
-  --mx-border-radius: 20px;
-  --mx-blur: 20px;
+  /* Enchanted Mystical Realm Interface */
+  --mx-bg: linear-gradient(135deg, #1a0033 0%, #2d1b69 50%, #1a0033 100%);
+  --mx-text-color: #e8d5ff;
+  --mx-border-radius: 12px;
+  --mx-blur: 24px;
 
-  --mx-success-bg: radial-gradient(circle at center, rgba(50, 180, 120, 0.9), rgba(20, 80, 50, 0.95));
-  --mx-error-bg: radial-gradient(circle at center, rgba(180, 50, 80, 0.9), rgba(80, 20, 30, 0.95));
+  --mx-success-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(124, 58, 237, 0.98));
+  --mx-error-bg: linear-gradient(135deg, rgba(236, 72, 153, 0.95), rgba(190, 24, 93, 0.98));
 
-  --mx-spinner-color: #b794f6;
-  --mx-spinner-secondary-color: rgba(183, 148, 246, 0.3);
+  --mx-spinner-color: #a855f7;
+  --mx-spinner-secondary-color: rgba(168, 85, 247, 0.3);
 
-  /* Typography */
-  --mx-font-size-s: 13px;
-  --mx-font-size-m: 17px;
-  --mx-font-size-l: 24px;
+  /* Typography - Mystical Serif */
+  --mx-font-size-s: 12px;
+  --mx-font-size-m: 16px;
+  --mx-font-size-l: 20px;
+  --mx-font: 'Crimson Pro', 'Playfair Display', Georgia, 'Times New Roman', serif;
 
   /* Layout */
   --mx-event-log-position-bottom: 20px;
@@ -22,159 +23,199 @@
   --mx-event-log-position-left: auto;
   --mx-event-log-position-top: auto;
 
-  /* Widget Sizes */
-  --mx-widget-orb-diameter: 120px;
-  --mx-widget-mini-diameter: 150px;
-  --mx-widget-small-w: 320px;
+  /* Widget Sizes - Mystical proportions */
+  --mx-widget-orb-diameter: 88px;
+  --mx-widget-mini-diameter: 110px;
+  --mx-widget-small-w: 340px;
   --mx-widget-small-h: 200px;
-  --mx-widget-medium-w: 450px;
-  --mx-widget-medium-h: 280px;
-  --mx-widget-full-w: 600px;
-  --mx-widget-full-h: 80vh;
+  --mx-widget-medium-w: 460px;
+  --mx-widget-medium-h: 300px;
+  --mx-widget-full-w: 100vw;
+  --mx-widget-full-h: 100vh;
 
-  /* Widget Styles */
-  --mx-widget-bg: radial-gradient(ellipse at top, rgba(60, 30, 90, 0.95), rgba(30, 15, 45, 0.98));
-  --mx-widget-border-color: rgba(200, 150, 255, 0.4);
-  --mx-widget-border-radius: 24px;
+  /* Widget Styles - Mystical enchantment */
+  --mx-widget-bg: 
+    radial-gradient(ellipse at top, 
+      rgba(139, 92, 246, 0.15), 
+      rgba(45, 27, 105, 0.95), 
+      rgba(26, 0, 51, 0.98));
+  --mx-widget-border-color: rgba(168, 85, 247, 0.6);
+  --mx-widget-border-radius: 12px;
   --mx-widget-padding: 20px;
-  --mx-widget-shadow: 0 0 60px rgba(150, 100, 255, 0.3), 0 0 120px rgba(100, 50, 200, 0.2);
+  --mx-widget-shadow: 
+    0 0 40px rgba(168, 85, 247, 0.3),
+    0 20px 60px rgba(139, 92, 246, 0.2),
+    inset 0 1px 0 rgba(196, 181, 253, 0.2),
+    inset 0 -1px 0 rgba(139, 92, 246, 0.1);
   
-  --mx-success-border-color: rgba(100, 255, 180, 0.8);
-  --mx-error-border-color: rgba(255, 100, 150, 0.8);
+  --mx-success-border-color: rgba(139, 92, 246, 0.8);
+  --mx-error-border-color: rgba(236, 72, 153, 0.8);
 
-  /* Magical Animations */
+  /* Animations */
   --mx-hotkey-trigger-duration: 4000ms;
   --mx-hotkey-trigger-animation-speed: 800ms;
 
-  /* Magical Notifications */
-  --mx-notification-duration: 4000ms;
-  --mx-notification-animation-style: pop; /* slide, fade, pop */
-  --mx-notification-bg: linear-gradient(135deg, rgba(80, 50, 120, 0.95), rgba(50, 30, 80, 0.95));
-  --mx-notification-border: 2px solid rgba(200, 150, 255, 0.5);
-  --mx-notification-shadow: 0 0 30px rgba(150, 100, 255, 0.5), 0 10px 40px rgba(0, 0, 0, 0.4);
+  /* Notifications - Floating enchantments */
+  --mx-notification-duration: 5000ms;
+  --mx-notification-animation-style: fade;
+  --mx-notification-bg: 
+    radial-gradient(ellipse at center, 
+      rgba(139, 92, 246, 0.25), 
+      rgba(45, 27, 105, 0.95));
+  --mx-notification-border: 2px solid rgba(196, 181, 253, 0.5);
+  --mx-notification-shadow: 
+    0 0 30px rgba(168, 85, 247, 0.4),
+    0 20px 40px rgba(139, 92, 246, 0.3);
   
-  /* Mystical Stats Widget */
-  --mx-stats-bg: radial-gradient(circle at center, rgba(40, 20, 60, 0.95), rgba(20, 10, 30, 0.98));
-  --mx-stats-label-color: rgba(200, 150, 255, 0.7);
-  --mx-stats-value-color: #f0d9ff;
+  /* Stats Widget - Arcane metrics */
+  --mx-stats-bg: 
+    radial-gradient(ellipse at center, 
+      rgba(139, 92, 246, 0.1), 
+      rgba(45, 27, 105, 0.9));
+  --mx-stats-label-color: rgba(196, 181, 253, 0.8);
+  --mx-stats-value-color: #e8d5ff;
   --mx-stats-grid-gap: 16px;
 
-  /* Spellbook - Enchanted Mystical Design */
-  --mx-spellbook-width: 600px;
-  --mx-spellbook-height: 440px;
-  --mx-spellbook-radius: 24px;
+  /* Spellbook - Ancient Grimoire */
+  --mx-spellbook-width: 780px;
+  --mx-spellbook-height: 580px;
+  --mx-spellbook-radius: 16px;
   --mx-spellbook-bg: 
-    radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.2) 0%, transparent 50%),
-    linear-gradient(135deg, rgba(50, 30, 80, 0.98), rgba(30, 20, 50, 0.98));
-  --mx-spellbook-border: rgba(200, 150, 255, 0.4);
+    radial-gradient(ellipse at center, 
+      rgba(139, 92, 246, 0.2), 
+      rgba(45, 27, 105, 0.98), 
+      rgba(26, 0, 51, 0.99));
+  --mx-spellbook-border: rgba(196, 181, 253, 0.6);
   --mx-spellbook-border-width: 2px;
   --mx-spellbook-shadow: 
-    0 0 60px rgba(139, 92, 246, 0.3),
-    0 20px 40px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --mx-spellbook-backdrop-filter: blur(20px) saturate(1.5);
+    0 0 80px rgba(168, 85, 247, 0.4),
+    0 40px 80px rgba(139, 92, 246, 0.3),
+    inset 0 2px 0 rgba(196, 181, 253, 0.3),
+    inset 0 -2px 0 rgba(139, 92, 246, 0.2);
+  --mx-spellbook-backdrop-filter: blur(30px) hue-rotate(15deg) saturate(150%);
   
-  /* Navigation - Mystical glowing bar */
+  /* Navigation - Mystical orb tabs */
   --mx-spellbook-nav-height: 80px;
   --mx-spellbook-nav-bg: 
     linear-gradient(90deg, 
-      rgba(40, 20, 60, 0.95), 
-      rgba(60, 30, 90, 0.98), 
-      rgba(40, 20, 60, 0.95));
-  --mx-spellbook-nav-border: rgba(200, 150, 255, 0.3);
+      rgba(139, 92, 246, 0.2), 
+      rgba(168, 85, 247, 0.25),
+      rgba(196, 181, 253, 0.15),
+      rgba(168, 85, 247, 0.25),
+      rgba(139, 92, 246, 0.2));
+  --mx-spellbook-nav-border: rgba(196, 181, 253, 0.4);
   --mx-spellbook-nav-border-width: 1px;
   --mx-spellbook-nav-gap: 16px;
   
-  /* Navigation items - Glowing orbs */
-  --mx-spellbook-nav-item-size: 64px;
+  /* Navigation items - Mystical orbs */
+  --mx-spellbook-nav-item-size: 60px;
   --mx-spellbook-nav-item-radius: 50%;
   --mx-spellbook-nav-item-bg: 
-    radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, rgba(60, 30, 90, 0.8) 100%);
+    radial-gradient(circle, 
+      rgba(168, 85, 247, 0.2), 
+      rgba(139, 92, 246, 0.3));
   --mx-spellbook-nav-item-border-width: 2px;
-  --mx-spellbook-nav-item-border: rgba(200, 150, 255, 0.3);
-  --mx-spellbook-nav-item-color: rgba(220, 180, 255, 0.9);
+  --mx-spellbook-nav-item-border: rgba(196, 181, 253, 0.4);
+  --mx-spellbook-nav-item-color: rgba(232, 213, 255, 0.8);
   --mx-spellbook-nav-item-shadow: 
-    0 0 20px rgba(139, 92, 246, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 20px rgba(168, 85, 247, 0.3),
+    inset 0 2px 0 rgba(196, 181, 253, 0.2);
   --mx-spellbook-nav-item-hover-bg: 
-    radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, rgba(80, 40, 120, 0.9) 100%);
-  --mx-spellbook-nav-item-hover-color: #f0d9ff;
-  --mx-spellbook-nav-item-hover-transform: scale(1.1) translateY(-2px);
+    radial-gradient(circle, 
+      rgba(168, 85, 247, 0.4), 
+      rgba(139, 92, 246, 0.5));
+  --mx-spellbook-nav-item-hover-color: #f3f0ff;
+  --mx-spellbook-nav-item-hover-transform: scale(1.1) rotate(5deg);
   --mx-spellbook-nav-item-hover-shadow: 
-    0 0 30px rgba(168, 85, 247, 0.6),
-    0 10px 20px rgba(0, 0, 0, 0.3);
-  --mx-spellbook-nav-item-active-bg: 
-    radial-gradient(circle, rgba(196, 181, 253, 0.8) 0%, rgba(139, 92, 246, 0.9) 100%);
-  --mx-spellbook-nav-item-active-color: #1e1b4b;
-  --mx-spellbook-nav-item-active-shadow: 
-    0 0 40px rgba(196, 181, 253, 0.8),
-    0 0 80px rgba(139, 92, 246, 0.4),
+    0 0 40px rgba(168, 85, 247, 0.6),
+    0 8px 25px rgba(139, 92, 246, 0.4),
     inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  --mx-spellbook-nav-item-hover-border: rgba(196, 181, 253, 0.8);
+  --mx-spellbook-nav-item-active-bg: 
+    radial-gradient(circle, 
+      rgba(168, 85, 247, 0.9), 
+      rgba(139, 92, 246, 1));
+  --mx-spellbook-nav-item-active-color: #ffffff;
+  --mx-spellbook-nav-item-active-shadow: 
+    0 0 60px rgba(168, 85, 247, 0.8),
+    0 0 30px rgba(255, 255, 255, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4);
+  --mx-spellbook-nav-item-active-border: rgba(255, 255, 255, 0.6);
   --mx-spellbook-nav-item-active-transform: scale(1.15);
   
-  /* Active indicator - Glowing rune */
-  --mx-spellbook-active-indicator-color: #c4b5fd;
-  --mx-spellbook-active-indicator-width: 32px;
-  --mx-spellbook-active-indicator-height: 6px;
+  /* Active indicator - Mystical aura */
+  --mx-spellbook-active-indicator-color: #a855f7;
+  --mx-spellbook-active-indicator-width: 50px;
+  --mx-spellbook-active-indicator-height: 4px;
   --mx-spellbook-active-indicator-offset: -16px;
-  --mx-spellbook-active-indicator-radius: 3px;
+  --mx-spellbook-active-indicator-radius: 50px;
   
-  /* Icons - Mystical glow */
-  --mx-spellbook-nav-icon-size: 28px;
-  --mx-spellbook-nav-icon-stroke: 2.5;
-  --mx-spellbook-nav-icon-filter: drop-shadow(0 0 8px currentColor);
+  /* Icons - Mystical style */
+  --mx-spellbook-nav-icon-size: 26px;
+  --mx-spellbook-nav-icon-stroke: 1.5;
+  --mx-spellbook-nav-icon-filter: 
+    drop-shadow(0 0 8px rgba(168, 85, 247, 0.6))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   
-  /* Content area - Dark mystical background */
+  /* Content area - Spell scroll */
   --mx-spellbook-content-bg: 
-    radial-gradient(circle at 50% 50%, rgba(30, 20, 50, 0.6) 0%, rgba(20, 10, 30, 0.8) 100%);
-  --mx-spellbook-grid-columns: 2;
+    radial-gradient(ellipse at center, 
+      rgba(139, 92, 246, 0.1), 
+      rgba(45, 27, 105, 0.7),
+      rgba(26, 0, 51, 0.8));
+  --mx-spellbook-grid-columns: 4;
   --mx-spellbook-grid-gap: 20px;
-  --mx-spellbook-grid-padding: 24px;
+  --mx-spellbook-grid-padding: 28px;
   
-  /* Spell items - Magical grimoire pages */
+  /* Spell items - Enchanted runes */
   --mx-spell-item-bg: 
-    linear-gradient(135deg, rgba(60, 30, 90, 0.9), rgba(40, 20, 60, 0.95));
-  --mx-spell-item-border: rgba(200, 150, 255, 0.4);
-  --mx-spell-item-border-width: 2px;
-  --mx-spell-item-radius: 20px;
-  --mx-spell-item-padding: 20px;
-  --mx-spell-item-gap: 12px;
-  --mx-spell-item-min-height: 100px;
+    radial-gradient(ellipse at top left, 
+      rgba(168, 85, 247, 0.15), 
+      rgba(139, 92, 246, 0.25),
+      rgba(45, 27, 105, 0.8));
+  --mx-spell-item-border: rgba(196, 181, 253, 0.5);
+  --mx-spell-item-border-width: 1px;
+  --mx-spell-item-radius: 12px;
+  --mx-spell-item-padding: 18px;
+  --mx-spell-item-gap: 10px;
+  --mx-spell-item-min-height: 90px;
   --mx-spell-item-shadow: 
-    0 0 20px rgba(139, 92, 246, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 15px rgba(168, 85, 247, 0.2),
+    inset 0 1px 0 rgba(196, 181, 253, 0.2);
   --mx-spell-item-hover-bg: 
-    linear-gradient(135deg, rgba(80, 40, 120, 0.95), rgba(60, 30, 90, 0.98));
-  --mx-spell-item-hover-border: rgba(220, 180, 255, 0.6);
-  --mx-spell-item-hover-transform: translateY(-4px) scale(1.02);
+    radial-gradient(ellipse at center, 
+      rgba(168, 85, 247, 0.3), 
+      rgba(139, 92, 246, 0.4),
+      rgba(45, 27, 105, 0.9));
+  --mx-spell-item-hover-border: rgba(196, 181, 253, 0.8);
+  --mx-spell-item-hover-transform: translateY(-3px) scale(1.02);
   --mx-spell-item-hover-shadow: 
     0 0 30px rgba(168, 85, 247, 0.4),
-    0 20px 40px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 15px 30px rgba(139, 92, 246, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
   --mx-spell-item-active-bg: 
-    linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(100, 50, 150, 0.6));
-  --mx-spell-item-active-border: #c4b5fd;
+    radial-gradient(ellipse at center, 
+      rgba(168, 85, 247, 0.6), 
+      rgba(139, 92, 246, 0.7));
+  --mx-spell-item-active-border: #a855f7;
   --mx-spell-item-active-shadow: 
-    0 0 0 3px rgba(196, 181, 253, 0.3),
-    0 0 40px rgba(196, 181, 253, 0.6),
+    0 0 0 3px rgba(168, 85, 247, 0.4),
+    0 0 50px rgba(168, 85, 247, 0.6),
+    0 0 20px rgba(255, 255, 255, 0.3),
     inset 0 2px 0 rgba(255, 255, 255, 0.3);
   --mx-spell-item-active-transform: scale(1.05);
   
-  /* Text styling - Mystical fonts */
-  --mx-spell-title-color: #f0d9ff;
+  /* Text styling - Mystical typography */
+  --mx-spell-title-color: #e8d5ff;
   --mx-spell-shortcut-color: rgba(196, 181, 253, 0.9);
-  --mx-spell-shortcut-bg: rgba(0, 0, 0, 0.6);
+  --mx-spell-shortcut-bg: rgba(45, 27, 105, 0.8);
   
-  /* Placeholders - Ethereal */
-  --mx-placeholder-icon-color: rgba(200, 150, 255, 0.6);
-  --mx-placeholder-text-color: rgba(220, 180, 255, 0.8);
+  /* Placeholders - Ethereal style */
+  --mx-placeholder-icon-color: rgba(168, 85, 247, 0.6);
+  --mx-placeholder-text-color: rgba(196, 181, 253, 0.7);
   
-  /* Magical accent */
-  --mx-accent: #8b5cf6;
-
-  /* Magical glows and effects */
-  --mx-glow-primary: rgba(200, 150, 255, 0.6);
-  --mx-glow-secondary: rgba(150, 100, 255, 0.4);
-  --mx-pulse-duration: 3s;
+  /* Mystical accent */
+  --mx-accent: #a855f7;
+  --mx-accent-hover: #9333ea;
+  --mx-accent-light: rgba(168, 85, 247, 0.15);
 } 

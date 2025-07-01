@@ -9,9 +9,11 @@ export enum IpcChannel {
   SET_THEME = 'theme:set',
   LOAD_THEME = 'theme:load-theme',
 
-  // Overlay State & Content
-  OVERLAY_SET_STATUS = 'overlay:set-status',
-  OVERLAY_SHOW_CONTENT = 'overlay:show-content',
+  // Unified Widget State Management
+  WIDGET_STATE_UPDATE = 'widget:state-update',
+  
+  // Application State Management
+  APP_STATE_UPDATE = 'app:state-update',
 
   // System Agent -> Main Process
   AGENT_KEY_EVENT = 'agent:key-event',
@@ -24,16 +26,34 @@ export enum IpcChannel {
   OVERLAY_EDIT_MODE_CHANGED = 'overlay:edit-mode-changed',
   OVERLAY_WIDGET_DRAG_END = 'overlay:widget-drag-end',
 
-  // Spellbook
-  SPELLBOOK_UPDATE = 'spellbook:update',
-  SPELLBOOK_NAVIGATE = 'spellbook:navigate',
-  SPELLBOOK_CLOSE_REQUEST = 'spellbook:close-request',
-  SPELL_EXECUTE = 'spell:execute',
+  // Generic Navigation
+  NAVIGATION_INPUT = 'navigation:input',
+  WIDGET_ACTION_REQUEST = 'widget:action-request',
+}
 
-  // Spell Service Events
-  SPELL_START = 'spell:start',
-  SPELL_SUCCESS = 'spell:success',
-  SPELL_ERROR = 'spell:error',
+/**
+ * Application modes that drive the UI state
+ */
+export enum AppMode {
+  IDLE = 'idle',
+  SPELLBOOK = 'spellbook',
+  ECHOES = 'echoes',
+  SETTINGS = 'settings',
+  EDIT = 'edit'
+}
+
+/**
+ * State sources that widgets can bind to
+ */
+export enum WidgetStateSource {
+  NONE = 'none',
+  STATUS = 'status',
+  SPELLBOOK = 'spellbook',
+  ECHOES = 'echoes', 
+  SETTINGS = 'settings',
+  KEY_STREAM = 'key-stream',
+  NOTIFICATIONS = 'notifications',
+  STATS = 'stats'
 }
 
 /**
@@ -48,10 +68,12 @@ export interface OverlayStatus {
 export interface WidgetConfig {
   widgetId: string;
   component: string;
+  stateSource: WidgetStateSource;
   size: 'orb' | 'mini' | 'small' | 'medium' | 'full';
-  role?: 'spellbook';
   x?: number | string;
   y?: number | string;
+  // Optional visibility condition based on app mode
+  visibleInModes?: AppMode[];
 }
 
 export interface DisplayLayout {
@@ -95,6 +117,7 @@ export interface Theme {
   id: string; // The directory name of the theme
   name: string; // The human-readable name from theme.json
   tokens: string; // The absolute path to the tokens.css file
+  tokensUrl?: string; // The custom protocol URL for loading in renderer
   layouts?: ThemeLayouts;
 }
 
@@ -129,40 +152,6 @@ export interface SpellbookEntry {
 }
 
 /**
- * A map of IPC channel names to their listener function signatures.
- * This is used by the preload script to strongly type the `window.ipc.on` method,
- * preventing mismatches between sent and received data.
- */
-export type IpcListenerSignatures = {
-  [IpcChannel.SET_THEME]: (payload: ThemeAndLayout) => void;
-  [IpcChannel.OVERLAY_SET_STATUS]: (payload: OverlayStatus) => void;
-  [IpcChannel.OVERLAY_SHOW_CONTENT]: (payload: OverlayContent) => void;
-  [IpcChannel.AGENT_KEY_EVENT]: (payload: KeyEvent) => void;
-  [IpcChannel.HOTKEY_TRIGGERED]: (payload: HotkeyTriggeredPayload) => void;
-  [IpcChannel.OVERLAY_EDIT_MODE_CHANGED]: (payload: EditModePayload) => void;
-  [IpcChannel.SPELLBOOK_UPDATE]: (payload: SpellbookUpdatePayload) => void;
-  [IpcChannel.SPELLBOOK_NAVIGATE]: (payload: { key: string }) => void;
-  [IpcChannel.SPELL_START]: (payload: { spellId: string; metadata: any }) => void;
-  [IpcChannel.SPELL_SUCCESS]: (payload: { spellId: string; metadata: any; result: { output: string } }) => void;
-  [IpcChannel.SPELL_ERROR]: (payload: { spellId: string; metadata: any; error: Error }) => void;
-};
-
-/**
- * Defines the signatures for IPC handlers that can be invoked from a renderer
- * process and return a promise (i.e., using `ipcMain.handle`).
- */
-export type IpcInvokeSignatures = {
-  [IpcChannel.LOAD_THEME]: (themeId: string) => Promise<Theme>;
-  [IpcChannel.OVERLAY_WIDGET_DRAG_END]: (payload: {
-    widgetId: string;
-    x: number;
-    y: number;
-  }) => Promise<void>;
-  [IpcChannel.SPELLBOOK_CLOSE_REQUEST]: () => Promise<void>;
-  [IpcChannel.SPELL_EXECUTE]: (payload: { spellId: string }) => Promise<void>;
-};
-
-/**
  * Icon names for spellbook menu items
  */
 export enum SpellbookMenuIcon {
@@ -181,7 +170,92 @@ export interface SpellbookMenuItem {
   hotkey?: string;
 }
 
-export interface SpellbookUpdatePayload {
-  spells: SpellbookEntry[];
-  menu: SpellbookMenuItem[];
-} 
+/**
+ * Unified widget state update payload
+ */
+export interface WidgetStateUpdatePayload {
+  target: { widgetId: string } | { stateSource: WidgetStateSource };
+  state: any;
+}
+
+/**
+ * Application state that drives the entire UI
+ */
+export interface AppState {
+  mode: AppMode;
+  status: OverlayStatus;
+  spellbook: {
+    isVisible: boolean;
+    entries: SpellbookEntry[];
+    menu: SpellbookMenuItem[];
+    selectedMenu: string;
+    selectedSpell: number;
+    navigationMode: 'menu' | 'grid';
+  };
+  echoes: {
+    isVisible: boolean;
+    currentTrack?: string;
+    speed: number;
+    voice: string;
+  };
+  settings: {
+    isVisible: boolean;
+    currentPanel: string;
+  };
+  keyStream: {
+    pressedKeys: string;
+  };
+  stats: {
+    tokensPerSecond: number;
+    backgroundTasks: number;
+    totalTracks: number;
+    currentTrackClipboard: number;
+    totalClipboard: number;
+  };
+}
+
+/**
+ * Navigation input payload for unified keyboard handling
+ */
+export interface NavigationInputPayload {
+  key: string;
+  mode: AppMode;
+}
+
+/**
+ * Widget action request payload for generic widget interactions
+ */
+export interface WidgetActionRequestPayload {
+  widgetId: string;
+  action: string;
+  payload?: any;
+}
+
+/**
+ * A map of IPC channel names to their listener function signatures.
+ * This is used by the preload script to strongly type the `window.ipc.on` method,
+ * preventing mismatches between sent and received data.
+ */
+export type IpcListenerSignatures = {
+  [IpcChannel.SET_THEME]: (payload: ThemeAndLayout) => void;
+  [IpcChannel.WIDGET_STATE_UPDATE]: (payload: WidgetStateUpdatePayload) => void;
+  [IpcChannel.APP_STATE_UPDATE]: (payload: AppState) => void;
+  [IpcChannel.AGENT_KEY_EVENT]: (payload: KeyEvent) => void;
+  [IpcChannel.HOTKEY_TRIGGERED]: (payload: HotkeyTriggeredPayload) => void;
+  [IpcChannel.OVERLAY_EDIT_MODE_CHANGED]: (payload: EditModePayload) => void;
+  [IpcChannel.NAVIGATION_INPUT]: (payload: NavigationInputPayload) => void;
+};
+
+/**
+ * Defines the signatures for IPC handlers that can be invoked from a renderer
+ * process and return a promise (i.e., using `ipcMain.handle`).
+ */
+export type IpcInvokeSignatures = {
+  [IpcChannel.LOAD_THEME]: (themeId: string) => Promise<Theme>;
+  [IpcChannel.OVERLAY_WIDGET_DRAG_END]: (payload: {
+    widgetId: string;
+    x: number;
+    y: number;
+  }) => Promise<void>;
+  [IpcChannel.WIDGET_ACTION_REQUEST]: (payload: WidgetActionRequestPayload) => Promise<void>;
+}; 

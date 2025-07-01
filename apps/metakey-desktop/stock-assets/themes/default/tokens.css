@@ -1,148 +1,184 @@
 :root {
-  --mx-bg: rgba(30, 30, 40, 0.85);
-  --mx-text-color: #fff;
-  --mx-border-radius: 12px;
-  --mx-blur: 10px;
+  /* Clean Modern Minimalist Interface */
+  --mx-bg: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  --mx-text-color: #334155;
+  --mx-border-radius: 16px;
+  --mx-blur: 20px;
 
-  --mx-success-bg: rgba(30, 80, 50, 0.85);
-  --mx-error-bg: rgba(100, 30, 30, 0.85);
+  --mx-success-bg: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.95));
+  --mx-error-bg: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.95));
 
-  --mx-spinner-color: #fff;
-  --mx-spinner-secondary-color: rgba(255, 255, 255, 0.3);
+  --mx-spinner-color: #3b82f6;
+  --mx-spinner-secondary-color: rgba(59, 130, 246, 0.2);
 
-  /* Typography */
-  --mx-font-size-s: 12px;
-  --mx-font-size-m: 16px;
-  --mx-font-size-l: 20px;
+  /* Typography - Elegant Sans-serif */
+  --mx-font-size-s: 13px;
+  --mx-font-size-m: 15px;
+  --mx-font-size-l: 19px;
+  --mx-font: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   /* Layout */
-  --mx-event-log-position-bottom: 10px;
-  --mx-event-log-position-right: 10px;
+  --mx-event-log-position-bottom: 24px;
+  --mx-event-log-position-right: 24px;
   --mx-event-log-position-left: auto;
   --mx-event-log-position-top: auto;
 
-  /* Widget Sizes */
-  --mx-widget-orb-diameter: 72px;
-  --mx-widget-mini-diameter: 96px;
-  --mx-widget-small-w: 280px;
+  /* Widget Sizes - Spacious and comfortable */
+  --mx-widget-orb-diameter: 80px;
+  --mx-widget-mini-diameter: 100px;
+  --mx-widget-small-w: 320px;
   --mx-widget-small-h: 180px;
-  --mx-widget-medium-w: 400px;
-  --mx-widget-medium-h: 220px;
+  --mx-widget-medium-w: 420px;
+  --mx-widget-medium-h: 260px;
   --mx-widget-full-w: 100vw;
   --mx-widget-full-h: 100vh;
 
-  /* Widget Styles */
-  --mx-widget-bg: rgba(20, 20, 30, 0.92);
-  --mx-widget-border-color: rgba(170, 170, 200, 0.2);
-  --mx-widget-border-radius: 16px;
-  --mx-widget-padding: 16px;
-  --mx-widget-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  
-  --mx-success-border-color: rgba(60, 200, 120, 0.7);
-  --mx-error-border-color: rgba(220, 80, 80, 0.7);
-
-  /* Animations */
-  --mx-hotkey-trigger-duration: 3000ms;
-  --mx-hotkey-trigger-animation-speed: 500ms;
-
-  /* Notifications */
-  --mx-notification-duration: 3000ms;
-  --mx-notification-animation-style: slide; /* slide, fade, pop */
-  --mx-notification-bg: rgba(40, 40, 60, 0.95);
-  --mx-notification-border: 1px solid rgba(100, 100, 150, 0.3);
-  --mx-notification-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  
-  /* Stats Widget */
-  --mx-stats-bg: rgba(20, 20, 30, 0.9);
-  --mx-stats-label-color: rgba(255, 255, 255, 0.6);
-  --mx-stats-value-color: #fff;
-  --mx-stats-grid-gap: 12px;
-
-  /* Spellbook Widget */
-  --mx-spellbook-width: 500px;
-  --mx-spellbook-height: 300px;
-  --mx-spellbook-max-height: 80vh;
-  --mx-spellbook-bg: var(--mx-widget-bg);
-  --mx-spell-item-selected-bg: rgba(255, 255, 255, 0.1);
-  --mx-spell-item-shortcut-bg: rgba(0,0,0,0.3);
-  
-  /* Spellbook - Clean Professional Design */
-  --mx-spellbook-width: 520px;
-  --mx-spellbook-height: 360px;
-  --mx-spellbook-radius: 16px;
-  --mx-spellbook-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
-  --mx-spellbook-border: rgba(226, 232, 240, 0.8);
-  --mx-spellbook-border-width: 1px;
-  --mx-spellbook-shadow: 
+  /* Widget Styles - Glass morphism */
+  --mx-widget-bg: 
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.95), 
+      rgba(255, 255, 255, 0.85));
+  --mx-widget-border-color: rgba(203, 213, 225, 0.6);
+  --mx-widget-border-radius: 20px;
+  --mx-widget-padding: 24px;
+  --mx-widget-shadow: 
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  --mx-spellbook-backdrop-filter: blur(10px);
+    0 0 0 1px rgba(255, 255, 255, 0.5);
   
-  /* Navigation - Top horizontal bar */
+  --mx-success-border-color: rgba(16, 185, 129, 0.6);
+  --mx-error-border-color: rgba(239, 68, 68, 0.6);
+
+  /* Animations */
+  --mx-hotkey-trigger-duration: 3500ms;
+  --mx-hotkey-trigger-animation-speed: 600ms;
+
+  /* Notifications - Elegant cards */
+  --mx-notification-duration: 4000ms;
+  --mx-notification-animation-style: fade;
+  --mx-notification-bg: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  --mx-notification-border: 1px solid rgba(203, 213, 225, 0.4);
+  --mx-notification-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
+  
+  /* Stats Widget - Clean metrics */
+  --mx-stats-bg: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.85));
+  --mx-stats-label-color: rgba(100, 116, 139, 0.8);
+  --mx-stats-value-color: #334155;
+  --mx-stats-grid-gap: 20px;
+
+  /* Spellbook - Elegant Modal */
+  --mx-spellbook-width: 640px;
+  --mx-spellbook-height: 520px;
+  --mx-spellbook-radius: 24px;
+  --mx-spellbook-bg: 
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.98), 
+      rgba(248, 250, 252, 0.96));
+  --mx-spellbook-border: rgba(203, 213, 225, 0.5);
+  --mx-spellbook-border-width: 1px;
+  --mx-spellbook-shadow: 
+    0 50px 100px -20px rgba(50, 50, 93, 0.25),
+    0 30px 60px -30px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.9);
+  --mx-spellbook-backdrop-filter: blur(40px) saturate(180%);
+  
+  /* Navigation - Pill tabs */
   --mx-spellbook-nav-height: 72px;
-  --mx-spellbook-nav-bg: linear-gradient(90deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.9));
-  --mx-spellbook-nav-border: rgba(226, 232, 240, 0.6);
+  --mx-spellbook-nav-bg: 
+    linear-gradient(135deg, 
+      rgba(248, 250, 252, 0.8), 
+      rgba(241, 245, 249, 0.85));
+  --mx-spellbook-nav-border: rgba(203, 213, 225, 0.3);
   --mx-spellbook-nav-border-width: 1px;
   --mx-spellbook-nav-gap: 12px;
   
-  /* Navigation items - Clean and minimal */
-  --mx-spellbook-nav-item-size: 56px;
-  --mx-spellbook-nav-item-radius: 12px;
-  --mx-spellbook-nav-item-bg: transparent;
+  /* Navigation items - Pill buttons */
+  --mx-spellbook-nav-item-size: 52px;
+  --mx-spellbook-nav-item-radius: 16px;
+  --mx-spellbook-nav-item-bg: rgba(255, 255, 255, 0.6);
   --mx-spellbook-nav-item-border-width: 0;
-  --mx-spellbook-nav-item-color: rgba(71, 85, 105, 0.8);
-  --mx-spellbook-nav-item-hover-bg: rgba(241, 245, 249, 0.8);
-  --mx-spellbook-nav-item-hover-color: rgb(71, 85, 105);
-  --mx-spellbook-nav-item-hover-transform: translateY(-1px);
-  --mx-spellbook-nav-item-active-bg: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  --mx-spellbook-nav-item-active-color: white;
-  --mx-spellbook-nav-item-active-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  --mx-spellbook-nav-item-border: transparent;
+  --mx-spellbook-nav-item-color: rgba(100, 116, 139, 0.8);
+  --mx-spellbook-nav-item-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --mx-spellbook-nav-item-hover-bg: rgba(255, 255, 255, 0.9);
+  --mx-spellbook-nav-item-hover-color: #475569;
+  --mx-spellbook-nav-item-hover-transform: translateY(-2px);
+  --mx-spellbook-nav-item-hover-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --mx-spellbook-nav-item-hover-border: rgba(203, 213, 225, 0.4);
+  --mx-spellbook-nav-item-active-bg: 
+    linear-gradient(135deg, rgba(59, 130, 246, 1), rgba(37, 99, 235, 1));
+  --mx-spellbook-nav-item-active-color: #ffffff;
+  --mx-spellbook-nav-item-active-shadow: 
+    0 10px 15px -3px rgba(59, 130, 246, 0.4),
+    0 4px 6px -2px rgba(59, 130, 246, 0.2);
+  --mx-spellbook-nav-item-active-border: transparent;
+  --mx-spellbook-nav-item-active-transform: translateY(-1px);
   
-  /* Active indicator */
+  /* Active indicator - Soft glow */
   --mx-spellbook-active-indicator-color: #3b82f6;
-  --mx-spellbook-active-indicator-width: 24px;
-  --mx-spellbook-active-indicator-height: 4px;
+  --mx-spellbook-active-indicator-width: 40px;
+  --mx-spellbook-active-indicator-height: 3px;
   --mx-spellbook-active-indicator-offset: -12px;
-  --mx-spellbook-active-indicator-radius: 2px 2px 0 0;
+  --mx-spellbook-active-indicator-radius: 2px;
   
-  /* Icons */
+  /* Icons - Clean style */
   --mx-spellbook-nav-icon-size: 22px;
-  --mx-spellbook-nav-icon-stroke: 2;
+  --mx-spellbook-nav-icon-stroke: 1.5;
+  --mx-spellbook-nav-icon-filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
   
-  /* Content area */
-  --mx-spellbook-content-bg: rgba(255, 255, 255, 0.4);
+  /* Content area - Clean gallery */
+  --mx-spellbook-content-bg: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(248, 250, 252, 0.4));
   --mx-spellbook-grid-columns: 3;
-  --mx-spellbook-grid-gap: 12px;
-  --mx-spellbook-grid-padding: 20px;
+  --mx-spellbook-grid-gap: 16px;
+  --mx-spellbook-grid-padding: 24px;
   
   /* Spell items - Clean cards */
-  --mx-spell-item-bg: rgba(255, 255, 255, 0.7);
-  --mx-spell-item-border: rgba(226, 232, 240, 0.6);
+  --mx-spell-item-bg: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
+  --mx-spell-item-border: rgba(203, 213, 225, 0.4);
   --mx-spell-item-border-width: 1px;
-  --mx-spell-item-radius: 12px;
-  --mx-spell-item-padding: 16px;
-  --mx-spell-item-gap: 8px;
-  --mx-spell-item-min-height: 80px;
-  --mx-spell-item-hover-bg: rgba(255, 255, 255, 0.9);
+  --mx-spell-item-radius: 16px;
+  --mx-spell-item-padding: 20px;
+  --mx-spell-item-gap: 12px;
+  --mx-spell-item-min-height: 100px;
+  --mx-spell-item-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --mx-spell-item-hover-bg: 
+    linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(248, 250, 252, 0.95));
   --mx-spell-item-hover-border: rgba(59, 130, 246, 0.3);
-  --mx-spell-item-hover-transform: translateY(-2px);
-  --mx-spell-item-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  --mx-spell-item-active-bg: rgba(59, 130, 246, 0.1);
+  --mx-spell-item-hover-transform: translateY(-4px);
+  --mx-spell-item-hover-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --mx-spell-item-active-bg: 
+    linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.15));
   --mx-spell-item-active-border: #3b82f6;
   --mx-spell-item-active-shadow: 
-    0 0 0 2px #3b82f6,
-    0 8px 25px rgba(59, 130, 246, 0.2);
+    0 0 0 3px rgba(59, 130, 246, 0.2),
+    0 20px 25px -5px rgba(59, 130, 246, 0.3);
+  --mx-spell-item-active-transform: translateY(-2px);
   
-  /* Text styling */
-  --mx-spell-title-color: rgb(51, 65, 85);
-  --mx-spell-shortcut-color: rgba(71, 85, 105, 0.7);
-  --mx-spell-shortcut-bg: rgba(241, 245, 249, 0.8);
+  /* Text styling - Elegant typography */
+  --mx-spell-title-color: #334155;
+  --mx-spell-shortcut-color: rgba(59, 130, 246, 0.9);
+  --mx-spell-shortcut-bg: rgba(248, 250, 252, 0.9);
   
-  /* Placeholders */
-  --mx-placeholder-icon-color: rgba(148, 163, 184, 0.8);
-  --mx-placeholder-text-color: rgba(100, 116, 139, 0.8);
+  /* Placeholders - Soft style */
+  --mx-placeholder-icon-color: rgba(148, 163, 184, 0.6);
+  --mx-placeholder-text-color: rgba(100, 116, 139, 0.7);
   
-  /* Accent colors */
+  /* Clean accent */
   --mx-accent: #3b82f6;
+  --mx-accent-hover: #2563eb;
+  --mx-accent-light: rgba(59, 130, 246, 0.1);
 }

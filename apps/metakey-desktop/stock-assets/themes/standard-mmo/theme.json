@@ -8,6 +8,7 @@
           {
             "widgetId": "main-hud",
             "component": "MainHUD",
+            "stateSource": "status",
             "size": "medium",
             "x": "5%",
             "y": "5%"
@@ -15,11 +16,13 @@
           {
             "widgetId": "notifications",
             "component": "Notifications",
+            "stateSource": "notifications",
             "size": "medium"
           },
           {
             "widgetId": "stats",
             "component": "Stats",
+            "stateSource": "stats",
             "size": "small",
             "x": "80%",
             "y": "80%"
@@ -27,9 +30,11 @@
           {
             "widgetId": "spell-book",
             "component": "SpellBook",
-            "role": "spellbook",
+            "stateSource": "spellbook",
+            "size": "medium",
             "x": "78%",
-            "y": "25%"
+            "y": "25%",
+            "visibleInModes": ["spellbook"]
           }
         ]
       },
@@ -38,22 +43,27 @@
           {
             "widgetId": "main-hud",
             "component": "MainHUD",
+            "stateSource": "status",
             "size": "medium"
           },
           {
             "widgetId": "notifications",
             "component": "Notifications",
+            "stateSource": "notifications",
             "size": "medium"
           },
           {
             "widgetId": "stats",
             "component": "Stats",
+            "stateSource": "stats",
             "size": "small"
           },
           {
             "widgetId": "spell-book",
             "component": "SpellBook",
-            "role": "spellbook"
+            "stateSource": "spellbook",
+            "size": "medium",
+            "visibleInModes": ["spellbook"]
           }
         ]
       }

@@ -27,27 +27,33 @@
  */
 
 import './index.css';
-import { IpcChannel, OverlayStatus, Theme, KeyEvent, OverlayContent, HotkeyTriggeredPayload, EditModePayload, WidgetConfig, ThemeAndLayout, SpellbookEntry, SpellbookMenuItem } from 'shared-types';
+import { 
+  IpcChannel, 
+  Theme, 
+  WidgetConfig, 
+  ThemeAndLayout, 
+  AppState,
+  AppMode,
+  WidgetStateSource,
+  WidgetStateUpdatePayload,
+  HotkeyTriggeredPayload,
+  EditModePayload
+} from 'shared-types';
 import { Draggable } from './lib/draggable';
 import { BaseWidget, MainHUDView, NotificationsView, StatsView, SpellbookView } from './views';
 
 declare global {
   interface Window {
     ipc: {
-      on(channel: IpcChannel.OVERLAY_SET_STATUS, listener: (status: OverlayStatus) => void): () => void;
-      on(channel: IpcChannel.OVERLAY_SHOW_CONTENT, listener: (content: OverlayContent) => void): () => void;
+      on(channel: IpcChannel.APP_STATE_UPDATE, listener: (state: AppState) => void): () => void;
+      on(channel: IpcChannel.WIDGET_STATE_UPDATE, listener: (payload: WidgetStateUpdatePayload) => void): () => void;
       on(channel: IpcChannel.SET_THEME, listener: (payload: ThemeAndLayout) => void): () => void;
       on(channel: IpcChannel.HOTKEY_TRIGGERED, listener: (payload: HotkeyTriggeredPayload) => void): () => void;
       on(channel: IpcChannel.OVERLAY_EDIT_MODE_CHANGED, listener: (payload: EditModePayload) => void): () => void;
-      on(channel: IpcChannel.SPELLBOOK_UPDATE, listener: (payload: { spells: SpellbookEntry[]; menu: SpellbookMenuItem[] }) => void): () => void;
-      on(channel: IpcChannel.SPELLBOOK_NAVIGATE, listener: (payload: { key: string }) => void): () => void;
-      on(channel: IpcChannel.SPELL_START, listener: (payload: { spellId: string; metadata: any }) => void): () => void;
-      on(channel: IpcChannel.SPELL_SUCCESS, listener: (payload: { spellId: string; metadata: any; result: { output: string } }) => void): () => void;
-      on(channel: IpcChannel.SPELL_ERROR, listener: (payload: { spellId: string; metadata: any; error: Error }) => void): () => void;
+      on(channel: string, listener: (...args: any[]) => void): () => void;
       invoke(channel: IpcChannel.OVERLAY_WIDGET_DRAG_END, payload: { widgetId: string, x: number, y: number }): Promise<void>;
       invoke(channel: IpcChannel.LOAD_THEME, themeId: string): Promise<Theme>;
-      invoke(channel: IpcChannel.SPELLBOOK_CLOSE_REQUEST): Promise<void>;
-      invoke(channel: IpcChannel.SPELL_EXECUTE, payload: { spellId: string }): Promise<void>;
+      invoke(channel: string, ...args: any[]): Promise<any>;
     };
   }
 }
@@ -56,6 +62,8 @@ class Renderer {
   private overlayRoot: HTMLElement;
   private activeDraggables: Draggable[] = [];
   private widgets: BaseWidget[] = [];
+  private currentLayout: WidgetConfig[] = [];
+  private currentAppState: AppState | null = null;
   
   // Widget instances
   private mainHUDView: MainHUDView | null = null;
@@ -87,6 +95,7 @@ class Renderer {
     // Clean up existing widgets
     this.cleanupWidgets();
     this.overlayRoot.innerHTML = '';
+    this.currentLayout = [...layout];
     
     for (const widgetConfig of layout) {
       const template = document.getElementById(`template-${widgetConfig.component}`) as HTMLTemplateElement;
@@ -101,6 +110,7 @@ class Renderer {
       if (widgetEl) {
         widgetEl.dataset.widgetId = widgetConfig.widgetId;
         widgetEl.dataset.size = widgetConfig.size;
+        widgetEl.dataset.stateSource = widgetConfig.stateSource;
         
         // Remove default position classes if custom coordinates are provided
         if (widgetConfig.x !== undefined && widgetConfig.y !== undefined) {
@@ -128,6 +138,12 @@ class Renderer {
     // If we are in edit mode, make the new widgets draggable
     if (this.overlayRoot.classList.contains('edit-mode')) {
       this.enableDrag();
+    }
+
+    // Apply current app state to newly rendered widgets
+    if (this.currentAppState) {
+      this.updateWidgetVisibility(this.currentAppState);
+      this.updateWidgetStates(this.currentAppState);
     }
   }
 
@@ -199,6 +215,80 @@ class Renderer {
     this.activeDraggables = [];
   }
 
+  private updateWidgetVisibility(state: AppState): void {
+    for (const widgetConfig of this.currentLayout) {
+      const widgetEl = document.querySelector(`[data-widget-id="${widgetConfig.widgetId}"]`) as HTMLElement;
+      if (!widgetEl) continue;
+
+      const shouldBeVisible = this.isWidgetVisible(widgetConfig, state.mode);
+      widgetEl.style.display = shouldBeVisible ? 'block' : 'none';
+    }
+  }
+
+  private isWidgetVisible(widgetConfig: WidgetConfig, currentMode: AppMode): boolean {
+    if (!widgetConfig.visibleInModes || widgetConfig.visibleInModes.length === 0) {
+      return true; // Always visible if no conditions specified
+    }
+    return widgetConfig.visibleInModes.includes(currentMode);
+  }
+
+  private updateWidgetStates(state: AppState): void {
+    // Update each widget with its relevant state slice
+    for (const widgetConfig of this.currentLayout) {
+      const stateData = this.getStateForSource(state, widgetConfig.stateSource);
+      this.updateWidgetWithState(widgetConfig, stateData);
+    }
+  }
+
+  private getStateForSource(state: AppState, source: WidgetStateSource): any {
+    switch (source) {
+      case WidgetStateSource.STATUS:
+        return state.status;
+      case WidgetStateSource.SPELLBOOK:
+        return state.spellbook;
+      case WidgetStateSource.ECHOES:
+        return state.echoes;
+      case WidgetStateSource.SETTINGS:
+        return state.settings;
+      case WidgetStateSource.KEY_STREAM:
+        return state.keyStream;
+      case WidgetStateSource.STATS:
+        return state.stats;
+      case WidgetStateSource.NOTIFICATIONS:
+        return { notifications: [] }; // This would be managed separately
+      case WidgetStateSource.NONE:
+      default:
+        return {};
+    }
+  }
+
+  private updateWidgetWithState(widgetConfig: WidgetConfig, stateData: any): void {
+    const { widgetId, stateSource } = widgetConfig;
+
+    switch (stateSource) {
+      case WidgetStateSource.STATUS:
+        if (this.mainHUDView) {
+          this.mainHUDView.setStatus(stateData.status, stateData.message);
+        }
+        break;
+             case WidgetStateSource.SPELLBOOK:
+         if (this.spellbookView) {
+           this.spellbookView.updateState(stateData);
+         }
+         break;
+      case WidgetStateSource.KEY_STREAM:
+        if (this.statsView) {
+          this.statsView.showPressedKeys(stateData.pressedKeys || '');
+        }
+        break;
+      case WidgetStateSource.STATS:
+        if (this.statsView) {
+          this.statsView.updateStats(stateData);
+        }
+        break;
+    }
+  }
+
   private registerIpcListeners() {
     window.ipc.on(IpcChannel.SET_THEME, ({ theme, layout }: ThemeAndLayout) => {
       // Load the theme CSS file
@@ -209,23 +299,21 @@ class Renderer {
       
       const themeLink = document.createElement('link');
       themeLink.rel = 'stylesheet';
-      themeLink.href = theme.tokens; // This should be the path to the CSS file
+      // Use custom protocol URL for renderer, fallback to file path for packaged app
+      themeLink.href = theme.tokensUrl || `file://${theme.tokens}`;
       themeLink.setAttribute('data-theme-tokens', '');
       document.head.appendChild(themeLink);
       
       // Wait for CSS to load before rendering layout
       themeLink.onload = () => {
+        console.log(`✅ Theme CSS loaded successfully: ${theme.name}`);
         this.renderLayout(layout);
-        // Force spellbook to refresh if it's currently open
-        if (this.spellbookView && this.spellbookView.exists()) {
-          setTimeout(() => {
-            const spellbookWidget = document.querySelector('[data-widget-id="spell-book"]') as HTMLElement;
-            if (spellbookWidget && spellbookWidget.style.display !== 'none') {
-              // Trigger a style recalculation
-              spellbookWidget.offsetHeight;
-            }
-          }, 50);
-        }
+      };
+      
+      // Handle CSS load errors
+      themeLink.onerror = () => {
+        console.error(`❌ Failed to load theme CSS: ${theme.name}`);
+        this.renderLayout(layout);
       };
       
       // Fallback in case onload doesn't fire
@@ -234,55 +322,51 @@ class Renderer {
       }, 100);
     });
 
-    window.ipc.on(IpcChannel.SPELLBOOK_UPDATE, (payload) => {
-      this.spellbookView?.update(payload);
+    // Listen for unified app state updates
+    window.ipc.on(IpcChannel.APP_STATE_UPDATE, (state: AppState) => {
+      console.log('App state updated:', state);
+      this.currentAppState = state;
+      
+      // Update widget visibility based on current mode
+      this.updateWidgetVisibility(state);
+      
+      // Update each widget with its relevant state
+      this.updateWidgetStates(state);
     });
 
-    window.ipc.on(IpcChannel.SPELLBOOK_NAVIGATE, (payload) => {
-      // Navigation is handled directly in SpellbookView via its own IPC listener
+    // Listen for individual widget state updates (for targeted updates)
+    window.ipc.on(IpcChannel.WIDGET_STATE_UPDATE, (payload: WidgetStateUpdatePayload) => {
+      const { target, state } = payload;
+      
+      if ('widgetId' in target) {
+        // Update specific widget by ID
+        const widgetConfig = this.currentLayout.find(w => w.widgetId === target.widgetId);
+        if (widgetConfig) {
+          this.updateWidgetWithState(widgetConfig, state);
+        }
+      } else if ('stateSource' in target) {
+        // Update all widgets with this state source
+        const widgetsToUpdate = this.currentLayout.filter(w => w.stateSource === target.stateSource);
+        for (const widgetConfig of widgetsToUpdate) {
+          this.updateWidgetWithState(widgetConfig, state);
+        }
+      }
     });
 
-  window.ipc.on(IpcChannel.OVERLAY_SET_STATUS, (payload: OverlayStatus) => {
-      this.mainHUDView?.setStatus(payload.status, payload.message);
-  });
-
-  window.ipc.on(IpcChannel.OVERLAY_SHOW_CONTENT, (payload: OverlayContent) => {
-    if (payload.type === 'SPELL_RESULT') {
-        this.mainHUDView?.showContent(payload);
-    } else if (payload.type === 'KEY_STREAM') {
-        this.statsView?.showPressedKeys(payload.keys || '');
-    }
-  });
-  
-  window.ipc.on(IpcChannel.HOTKEY_TRIGGERED, (payload: HotkeyTriggeredPayload) => {
+    window.ipc.on(IpcChannel.HOTKEY_TRIGGERED, (payload: HotkeyTriggeredPayload) => {
       this.notificationsView?.showNotification(payload);
     });
 
-    window.ipc.on(IpcChannel.SPELL_START, ({ metadata }) => {
-      this.mainHUDView?.setStatus('processing', `Casting ${metadata.spellTitle || 'spell'}...`);
-    });
-
-    window.ipc.on(IpcChannel.SPELL_SUCCESS, ({ metadata, result }) => {
-      this.mainHUDView?.setStatus('success', 'Spell Complete!');
-      this.mainHUDView?.showSpellResult(metadata.spellTitle || 'Spell Result', result.output);
-    });
-
-    window.ipc.on(IpcChannel.SPELL_ERROR, ({ metadata, error }) => {
-      this.mainHUDView?.setStatus('error', error.message || 'An unknown error occurred.');
-  });
-
-  window.ipc.on(IpcChannel.OVERLAY_EDIT_MODE_CHANGED, ({ isEditMode }) => {
-    if (isEditMode) {
+    window.ipc.on(IpcChannel.OVERLAY_EDIT_MODE_CHANGED, ({ isEditMode }) => {
+      if (isEditMode) {
         this.overlayRoot.classList.add('edit-mode');
         this.enableDrag();
-    } else {
+      } else {
         this.overlayRoot.classList.remove('edit-mode');
         this.disableDrag();
-    }
-  });
+      }
+    });
   }
-
-
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -291,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Display a user-friendly error message in the UI
     document.body.innerHTML = `<div style="color: red; padding: 20px; font-family: system-ui, sans-serif; background: rgba(0,0,0,0.9); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; align-items: center; justify-content: center;">
       <div style="background: white; padding: 40px; border-radius: 8px; max-width: 500px; text-align: center;">
-        <h1 style="color: #d32f2f; margin-bottom: 16px;">Application Error</h1>
+        <h1 style="color:rgb(219, 38, 38); margin-bottom: 16px;">Application Error</h1>
         <p style="color: #333; margin-bottom: 16px;">Failed to load a critical component. The IPC bridge between the main process and renderer is not available.</p>
         <p style="color: #666; font-size: 14px;">Please check the developer console for details and restart the application.</p>
       </div>

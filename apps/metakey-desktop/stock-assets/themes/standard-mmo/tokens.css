@@ -1,180 +1,184 @@
 :root {
-  /* Professional color palette - clean and neutral */
-  --mx-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  --mx-text-color: #22223b;
-  --mx-border-radius: 12px;
-  --mx-blur: 8px;
+  /* Dark Tactical Gaming Interface */
+  --mx-bg: linear-gradient(135deg, #0a0f14 0%, #151b23 100%);
+  --mx-text-color: #e1e8ed;
+  --mx-border-radius: 4px;
+  --mx-blur: 12px;
 
-  --mx-success-bg: linear-gradient(135deg, rgba(72, 187, 120, 0.95), rgba(56, 161, 105, 0.95));
-  --mx-error-bg: linear-gradient(135deg, rgba(245, 101, 101, 0.95), rgba(229, 62, 62, 0.95));
+  --mx-success-bg: linear-gradient(135deg, rgba(0, 255, 127, 0.95), rgba(0, 200, 100, 0.95));
+  --mx-error-bg: linear-gradient(135deg, rgba(255, 69, 58, 0.95), rgba(200, 40, 30, 0.95));
 
-  --mx-spinner-color: #4299e1;
-  --mx-spinner-secondary-color: rgba(66, 153, 225, 0.3);
+  --mx-spinner-color: #00ff7f;
+  --mx-spinner-secondary-color: rgba(0, 255, 127, 0.3);
 
-  /* Typography - Clean and readable */
-  --mx-font-size-s: 14px;
-  --mx-font-size-m: 16px;
-  --mx-font-size-l: 20px;
-  --mx-font: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Typography - Military Tech */
+  --mx-font-size-s: 11px;
+  --mx-font-size-m: 14px;
+  --mx-font-size-l: 18px;
+  --mx-font: 'JetBrains Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
 
   /* Layout */
-  --mx-event-log-position-bottom: 20px;
-  --mx-event-log-position-right: 20px;
+  --mx-event-log-position-bottom: 12px;
+  --mx-event-log-position-right: 12px;
   --mx-event-log-position-left: auto;
   --mx-event-log-position-top: auto;
 
-  /* Widget Sizes - Large for MMO style */
-  --mx-widget-orb-diameter: 72px;
-  --mx-widget-mini-diameter: 96px;
-  --mx-widget-small-w: 320px;
-  --mx-widget-small-h: 200px;
-  --mx-widget-medium-w: 450px;
-  --mx-widget-medium-h: 280px;
+  /* Widget Sizes - Compact tactical */
+  --mx-widget-orb-diameter: 64px;
+  --mx-widget-mini-diameter: 84px;
+  --mx-widget-small-w: 280px;
+  --mx-widget-small-h: 160px;
+  --mx-widget-medium-w: 400px;
+  --mx-widget-medium-h: 240px;
   --mx-widget-full-w: 100vw;
   --mx-widget-full-h: 100vh;
 
-  /* Widget Styles - Clean and professional with transparency */
-  --mx-widget-bg: rgba(255, 255, 255, 0.5);
-  --mx-widget-border-color: rgba(224, 231, 239, 0.5);
-  --mx-widget-border-radius: 20px;
-  --mx-widget-padding: 24px;
-  --mx-widget-shadow: 0 8px 32px rgba(60, 72, 100, 0.12);
+  /* Widget Styles - Dark tactical with neon green */
+  --mx-widget-bg: 
+    linear-gradient(135deg, 
+      rgba(10, 15, 20, 0.98), 
+      rgba(15, 25, 35, 0.95));
+  --mx-widget-border-color: rgba(0, 255, 127, 0.4);
+  --mx-widget-border-radius: 4px;
+  --mx-widget-padding: 16px;
+  --mx-widget-shadow: 
+    0 0 20px rgba(0, 255, 127, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(0, 255, 127, 0.2);
   
-  --mx-success-border-color: rgba(72, 187, 120, 0.8);
-  --mx-error-border-color: rgba(245, 101, 101, 0.8);
+  --mx-success-border-color: rgba(0, 255, 127, 0.8);
+  --mx-error-border-color: rgba(255, 69, 58, 0.8);
 
   /* Animations */
-  --mx-hotkey-trigger-duration: 2500ms;
-  --mx-hotkey-trigger-animation-speed: 400ms;
+  --mx-hotkey-trigger-duration: 2000ms;
+  --mx-hotkey-trigger-animation-speed: 300ms;
 
-  /* Notifications */
-  --mx-notification-duration: 3000ms;
+  /* Notifications - HUD style */
+  --mx-notification-duration: 2500ms;
   --mx-notification-animation-style: slide;
-  --mx-notification-bg: rgba(255, 255, 255, 0.5);
-  --mx-notification-border: 1px solid rgba(203, 213, 224, 0.5);
-  --mx-notification-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --mx-notification-bg: 
+    linear-gradient(135deg, rgba(10, 15, 20, 0.98), rgba(15, 25, 35, 0.95));
+  --mx-notification-border: 2px solid rgba(0, 255, 127, 0.6);
+  --mx-notification-shadow: 
+    0 0 20px rgba(0, 255, 127, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.6);
   
-  /* Stats Widget */
-  --mx-stats-bg: rgba(255, 255, 255, 0.5);
-  --mx-stats-label-color: rgba(45, 55, 72, 0.7);
-  --mx-stats-value-color: #2d3748;
-  --mx-stats-grid-gap: 16px;
+  /* Stats Widget - System monitor */
+  --mx-stats-bg: 
+    linear-gradient(135deg, rgba(10, 15, 20, 0.98), rgba(15, 25, 35, 0.95));
+  --mx-stats-label-color: rgba(0, 255, 127, 0.8);
+  --mx-stats-value-color: #e1e8ed;
+  --mx-stats-grid-gap: 12px;
 
-  /* Spellbook - Tactical Command Interface */
-  --mx-spellbook-width: 560px;
-  --mx-spellbook-height: 380px;
-  --mx-spellbook-radius: 8px;
+  /* Spellbook - Command Terminal Interface */
+  --mx-spellbook-width: 720px;
+  --mx-spellbook-height: 480px;
+  --mx-spellbook-radius: 4px;
   --mx-spellbook-bg: 
     linear-gradient(135deg, 
-      rgba(15, 23, 42, 0.98), 
-      rgba(30, 41, 59, 0.96));
-  --mx-spellbook-border: rgba(148, 163, 184, 0.3);
+      rgba(5, 10, 15, 0.98), 
+      rgba(10, 15, 20, 0.96));
+  --mx-spellbook-border: rgba(0, 255, 127, 0.6);
   --mx-spellbook-border-width: 2px;
   --mx-spellbook-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(148, 163, 184, 0.1),
-    inset 0 1px 0 rgba(148, 163, 184, 0.1);
-  --mx-spellbook-backdrop-filter: blur(16px) contrast(1.1);
+    0 0 40px rgba(0, 255, 127, 0.2),
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(0, 255, 127, 0.3);
+  --mx-spellbook-backdrop-filter: blur(16px) contrast(1.2);
   
-  /* Navigation - Military command bar */
-  --mx-spellbook-nav-height: 64px;
+  /* Navigation - Command bar */
+  --mx-spellbook-nav-height: 56px;
   --mx-spellbook-nav-bg: 
     linear-gradient(90deg, 
-      rgba(30, 41, 59, 0.95), 
-      rgba(51, 65, 85, 0.98),
-      rgba(30, 41, 59, 0.95));
-  --mx-spellbook-nav-border: rgba(148, 163, 184, 0.2);
+      rgba(0, 255, 127, 0.1), 
+      rgba(0, 200, 100, 0.15),
+      rgba(0, 255, 127, 0.1));
+  --mx-spellbook-nav-border: rgba(0, 255, 127, 0.4);
   --mx-spellbook-nav-border-width: 1px;
-  --mx-spellbook-nav-gap: 8px;
+  --mx-spellbook-nav-gap: 4px;
   
-  /* Navigation items - Tactical buttons */
-  --mx-spellbook-nav-item-size: 48px;
-  --mx-spellbook-nav-item-radius: 6px;
-  --mx-spellbook-nav-item-bg: rgba(71, 85, 105, 0.3);
+  /* Navigation items - Terminal buttons */
+  --mx-spellbook-nav-item-size: 44px;
+  --mx-spellbook-nav-item-radius: 2px;
+  --mx-spellbook-nav-item-bg: rgba(0, 255, 127, 0.1);
   --mx-spellbook-nav-item-border-width: 1px;
-  --mx-spellbook-nav-item-border: rgba(148, 163, 184, 0.3);
-  --mx-spellbook-nav-item-color: rgba(203, 213, 225, 0.8);
+  --mx-spellbook-nav-item-border: rgba(0, 255, 127, 0.3);
+  --mx-spellbook-nav-item-color: rgba(225, 232, 237, 0.8);
   --mx-spellbook-nav-item-shadow: 
-    inset 0 1px 0 rgba(148, 163, 184, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.3);
-  --mx-spellbook-nav-item-hover-bg: rgba(100, 116, 139, 0.5);
-  --mx-spellbook-nav-item-hover-color: #e2e8f0;
+    inset 0 1px 0 rgba(0, 255, 127, 0.2);
+  --mx-spellbook-nav-item-hover-bg: rgba(0, 255, 127, 0.2);
+  --mx-spellbook-nav-item-hover-color: #e1e8ed;
   --mx-spellbook-nav-item-hover-transform: none;
   --mx-spellbook-nav-item-hover-shadow: 
-    inset 0 1px 0 rgba(203, 213, 225, 0.2),
-    0 2px 8px rgba(0, 0, 0, 0.4);
-  --mx-spellbook-nav-item-hover-border: rgba(203, 213, 225, 0.5);
+    0 0 12px rgba(0, 255, 127, 0.4),
+    inset 0 1px 0 rgba(0, 255, 127, 0.4);
+  --mx-spellbook-nav-item-hover-border: rgba(0, 255, 127, 0.6);
   --mx-spellbook-nav-item-active-bg: 
-    linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(22, 163, 74, 0.9));
-  --mx-spellbook-nav-item-active-color: #0f172a;
+    linear-gradient(135deg, rgba(0, 255, 127, 0.8), rgba(0, 200, 100, 0.9));
+  --mx-spellbook-nav-item-active-color: #0a0f14;
   --mx-spellbook-nav-item-active-shadow: 
-    inset 0 2px 0 rgba(255, 255, 255, 0.2),
-    0 0 0 2px rgba(34, 197, 94, 0.3),
-    0 4px 12px rgba(0, 0, 0, 0.4);
-  --mx-spellbook-nav-item-active-border: rgba(34, 197, 94, 0.6);
+    0 0 20px rgba(0, 255, 127, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --mx-spellbook-nav-item-active-border: rgba(0, 255, 127, 0.8);
   --mx-spellbook-nav-item-active-transform: none;
   
-  /* Active indicator - Tactical stripe */
-  --mx-spellbook-active-indicator-color: #22c55e;
-  --mx-spellbook-active-indicator-width: 32px;
-  --mx-spellbook-active-indicator-height: 3px;
-  --mx-spellbook-active-indicator-offset: -10px;
+  /* Active indicator - Neon line */
+  --mx-spellbook-active-indicator-color: #00ff7f;
+  --mx-spellbook-active-indicator-width: 36px;
+  --mx-spellbook-active-indicator-height: 2px;
+  --mx-spellbook-active-indicator-offset: -8px;
   --mx-spellbook-active-indicator-radius: 0;
   
-  /* Icons - Technical style */
-  --mx-spellbook-nav-icon-size: 20px;
-  --mx-spellbook-nav-icon-stroke: 2.5;
-  --mx-spellbook-nav-icon-filter: none;
+  /* Icons - Tech style */
+  --mx-spellbook-nav-icon-size: 18px;
+  --mx-spellbook-nav-icon-stroke: 2;
+  --mx-spellbook-nav-icon-filter: drop-shadow(0 0 4px rgba(0, 255, 127, 0.3));
   
-  /* Content area - Command center */
+  /* Content area - Terminal */
   --mx-spellbook-content-bg: 
-    linear-gradient(180deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.6));
-  --mx-spellbook-grid-columns: 4;
-  --mx-spellbook-grid-gap: 8px;
+    linear-gradient(180deg, rgba(5, 10, 15, 0.9), rgba(10, 15, 20, 0.7));
+  --mx-spellbook-grid-columns: 5;
+  --mx-spellbook-grid-gap: 6px;
   --mx-spellbook-grid-padding: 16px;
   
-  /* Spell items - Command cards */
+  /* Spell items - Command entries */
   --mx-spell-item-bg: 
-    linear-gradient(135deg, rgba(51, 65, 85, 0.8), rgba(71, 85, 105, 0.6));
-  --mx-spell-item-border: rgba(148, 163, 184, 0.4);
+    linear-gradient(135deg, rgba(15, 25, 35, 0.8), rgba(20, 30, 40, 0.6));
+  --mx-spell-item-border: rgba(0, 255, 127, 0.3);
   --mx-spell-item-border-width: 1px;
-  --mx-spell-item-radius: 6px;
+  --mx-spell-item-radius: 2px;
   --mx-spell-item-padding: 12px;
   --mx-spell-item-gap: 6px;
-  --mx-spell-item-min-height: 72px;
+  --mx-spell-item-min-height: 64px;
   --mx-spell-item-shadow: 
-    inset 0 1px 0 rgba(148, 163, 184, 0.1),
-    0 2px 4px rgba(0, 0, 0, 0.3);
+    inset 0 1px 0 rgba(0, 255, 127, 0.1);
   --mx-spell-item-hover-bg: 
-    linear-gradient(135deg, rgba(71, 85, 105, 0.9), rgba(100, 116, 139, 0.7));
-  --mx-spell-item-hover-border: rgba(203, 213, 225, 0.6);
+    linear-gradient(135deg, rgba(20, 30, 40, 0.9), rgba(25, 35, 45, 0.8));
+  --mx-spell-item-hover-border: rgba(0, 255, 127, 0.6);
   --mx-spell-item-hover-transform: translateY(-1px);
   --mx-spell-item-hover-shadow: 
-    inset 0 1px 0 rgba(203, 213, 225, 0.2),
-    0 4px 12px rgba(0, 0, 0, 0.4);
+    0 0 16px rgba(0, 255, 127, 0.2),
+    inset 0 1px 0 rgba(0, 255, 127, 0.3);
   --mx-spell-item-active-bg: 
-    linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.3));
-  --mx-spell-item-active-border: #22c55e;
+    linear-gradient(135deg, rgba(0, 255, 127, 0.15), rgba(0, 200, 100, 0.2));
+  --mx-spell-item-active-border: #00ff7f;
   --mx-spell-item-active-shadow: 
-    0 0 0 2px rgba(34, 197, 94, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 4px 12px rgba(0, 0, 0, 0.4);
+    0 0 0 2px rgba(0, 255, 127, 0.4),
+    0 0 20px rgba(0, 255, 127, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   --mx-spell-item-active-transform: none;
   
-  /* Text styling - Military fonts */
-  --mx-spell-title-color: #e2e8f0;
-  --mx-spell-shortcut-color: rgba(148, 163, 184, 0.9);
-  --mx-spell-shortcut-bg: rgba(15, 23, 42, 0.8);
+  /* Text styling - Terminal fonts */
+  --mx-spell-title-color: #e1e8ed;
+  --mx-spell-shortcut-color: rgba(0, 255, 127, 0.9);
+  --mx-spell-shortcut-bg: rgba(5, 10, 15, 0.8);
   
-  /* Placeholders - Command style */
-  --mx-placeholder-icon-color: rgba(148, 163, 184, 0.6);
-  --mx-placeholder-text-color: rgba(203, 213, 225, 0.7);
+  /* Placeholders - System style */
+  --mx-placeholder-icon-color: rgba(0, 255, 127, 0.5);
+  --mx-placeholder-text-color: rgba(225, 232, 237, 0.7);
   
   /* Tactical accent */
-  --mx-accent: #22c55e;
-
-  /* Professional accent color */
-  --mx-accent: #3b82f6;
-  --mx-accent-hover: #3182ce;
-  --mx-accent-light: rgba(66, 153, 225, 0.1);
+  --mx-accent: #00ff7f;
+  --mx-accent-hover: #00e06b;
+  --mx-accent-light: rgba(0, 255, 127, 0.1);
 } 

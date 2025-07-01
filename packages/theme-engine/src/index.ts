@@ -19,8 +19,13 @@ export class ThemeService {
       const manifestContent = await fs.readFile(themePath, 'utf-8');
       const theme = JSON.parse(manifestContent) as Theme;
 
-      // Resolve the path to the tokens file relative to the theme's directory
-      theme.tokens = path.join(this.options.themesDirectory, themeId, theme.tokens);
+      // Provide both absolute path (for main process file operations) 
+      // and relative path (for renderer custom protocol)
+      const absoluteTokensPath = path.join(this.options.themesDirectory, themeId, theme.tokens);
+      const relativeTokensPath = `${themeId}/${theme.tokens}`;
+      
+      theme.tokens = absoluteTokensPath;
+      theme.tokensUrl = `metakey-theme://${relativeTokensPath}`;
 
       return theme;
     } catch (err) {
