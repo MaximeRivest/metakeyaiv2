@@ -211,21 +211,27 @@ class MainApplication {
 
   private updateWindowInteractivity(state: AppState): void {
     const shouldBeInteractive = state.mode !== AppMode.IDLE;
+    const isEditMode = state.mode === AppMode.EDIT;
+    
+    console.log(`>>> WINDOW INTERACTIVITY: mode=${state.mode}, shouldBeInteractive=${shouldBeInteractive}, isEditMode=${isEditMode}, current this.isEditMode=${this.isEditMode} at ${new Date().toISOString()}`);
     
     if (shouldBeInteractive !== this.isEditMode) {
+      console.log(`>>> WINDOW INTERACTIVITY: calling setInteractive(${shouldBeInteractive}) at ${new Date().toISOString()}`);
       this.setInteractive(shouldBeInteractive);
     }
   }
 
   private async updateHotkeyBindingsForMode(mode: AppMode): Promise<void> {
     try {
+      console.log(`>>> REGISTERING BINDINGS from [updateHotkeyBindingsForMode] for mode: ${mode} at ${new Date().toISOString()}`);
+      
       let bindings: HotkeyBinding[] = [];
       
       // Get base hotkey bindings
       const baseBindings = await this.configService.getHotkeyBindings(['default', 'alternative']);
       
-      if (mode === AppMode.IDLE) {
-        // In idle mode, use all standard bindings
+      if (mode === AppMode.IDLE || mode === AppMode.EDIT) {
+        // In idle mode and edit mode, use all standard bindings
         bindings = baseBindings;
       } else {
         // In navigation modes, add navigation-specific bindings
@@ -443,8 +449,14 @@ class MainApplication {
       this.executeSpell(spellId, metadata);
     });
     
-    this.hotkeyEngine.registerAction('overlay:toggle-edit-mode', this.toggleEditMode.bind(this));
-    this.hotkeyEngine.registerAction('overlay:toggle-spellbook', this.toggleSpellbookMode.bind(this));
+    this.hotkeyEngine.registerAction('overlay:toggle-edit-mode', (binding: HotkeyBinding) => {
+      console.log(`>>> HOTKEY ACTION TRIGGERED: overlay:toggle-edit-mode at ${new Date().toISOString()}`);
+      this.toggleEditMode.bind(this)();
+    });
+    this.hotkeyEngine.registerAction('overlay:toggle-spellbook', (binding: HotkeyBinding) => {
+      console.log(`>>> HOTKEY ACTION TRIGGERED: overlay:toggle-spellbook at ${new Date().toISOString()}`);
+      this.toggleSpellbookMode.bind(this)();
+    });
     this.hotkeyEngine.registerAction('theme:cycle', this.cycleTheme.bind(this));
     
     // Unified navigation action
@@ -552,10 +564,12 @@ class MainApplication {
 
   private async loadAndRegisterHotkeys(): Promise<void> {
     try {
-    // Define the loading order. In the future, this will come from user settings.
+      console.log(`>>> REGISTERING BINDINGS from [loadAndRegisterHotkeys] during initial setup at ${new Date().toISOString()}`);
+      
+      // Define the loading order. In the future, this will come from user settings.
       const setsToLoad = ['default', 'alternative'];
-    const finalBindings = await this.configService.getHotkeyBindings(setsToLoad);
-    this.hotkeyEngine.registerBindings(finalBindings);
+      const finalBindings = await this.configService.getHotkeyBindings(setsToLoad);
+      this.hotkeyEngine.registerBindings(finalBindings);
     } catch (e) {
       console.error("[Main] Failed to load and register hotkeys:", e);
     }
@@ -625,7 +639,14 @@ class MainApplication {
   }
 
   private toggleEditMode(): void {
-    this.setInteractive(!this.isEditMode);
+    console.log(`>>> MODE CHANGE: toggleEditMode called, current isEditMode: ${this.isEditMode} at ${new Date().toISOString()}`);
+    
+    // Use centralized state management instead of direct isEditMode manipulation
+    const currentMode = this.appStateManager.getState().mode;
+    const newMode = currentMode === AppMode.EDIT ? AppMode.IDLE : AppMode.EDIT;
+    
+    console.log(`>>> MODE CHANGE: toggleEditMode changing from ${currentMode} to ${newMode} at ${new Date().toISOString()}`);
+    this.appStateManager.setMode(newMode);
   }
 
   private async cycleTheme(): Promise<void> {
@@ -725,6 +746,7 @@ class MainApplication {
     const currentMode = this.appStateManager.getState().mode;
     const newMode = currentMode === AppMode.SPELLBOOK ? AppMode.IDLE : AppMode.SPELLBOOK;
     
+    console.log(`>>> MODE CHANGE: toggleSpellbookMode called, changing from ${currentMode} to ${newMode} at ${new Date().toISOString()}`);
     this.appStateManager.setMode(newMode);
   }
 }

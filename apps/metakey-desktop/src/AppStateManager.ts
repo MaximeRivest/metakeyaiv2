@@ -62,13 +62,17 @@ export class AppStateManager extends EventEmitter {
    */
   public setMode(mode: AppMode): void {
     const previousMode = this.state.mode;
+    console.log(`>>> APP STATE MANAGER: setMode called, changing from ${previousMode} to ${mode} at ${new Date().toISOString()}`);
+    
     this.state.mode = mode;
 
     // Update visibility states based on mode
     this.state.spellbook.isVisible = mode === AppMode.SPELLBOOK;
     this.state.echoes.isVisible = mode === AppMode.ECHOES;
     this.state.settings.isVisible = mode === AppMode.SETTINGS;
+    // Note: Edit mode doesn't show any special widgets, it just makes windows interactive
 
+    console.log(`>>> APP STATE MANAGER: emitting state-changed and mode-changed events at ${new Date().toISOString()}`);
     this.emit('state-changed', this.state);
     this.emit('mode-changed', { previous: previousMode, current: mode });
   }
